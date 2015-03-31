@@ -60,6 +60,7 @@ namespace hdsdump
 
 		public static void Main(string[] args)
 		{
+
             redirect2prc = Check4Redirect2Process(ref args);
 			CLI cli = new CLI(args);
             if (cli.chkParam("waitkey"  )) waitkey = true;
@@ -1847,7 +1848,7 @@ namespace hdsdump
                             if (this.negTS == Constants.INVALID_TIMESTAMP)
                             {
                                 this.negTS = (int)(fixedTS - packetTS);
-                                Program.DebugLog(String.Format("Negative timestamp detected: PacketTS={0} LastTS={1} NegativeTS={3}", packetTS, lastTS, this.negTS));
+                                Program.DebugLog(String.Format("Negative timestamp detected: PacketTS={0} LastTS={1} NegativeTS={2}", packetTS, lastTS, this.negTS));
                                 packetTS = fixedTS;
                             }
                             else
