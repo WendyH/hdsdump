@@ -413,7 +413,7 @@ namespace hdsdump
 
         public string getParam(string name)
         {
-            if (this.Params.ContainsKey(name)) return Params[name];
+            if (this.Params.ContainsKey(name)) return Params[name].Trim();
             else return "";
         }
 
@@ -1203,7 +1203,7 @@ namespace hdsdump
                 if (fragNum == this.fragCount)
                 {
                     retries++;
-                    Program.Message(String.Format("{0,-79}\r", "<c:DarkCyan>Updating bootstrap info, Retries: " + retries.ToString()));
+                    Program.Message(String.Format("{0,-80}\r", "<c:DarkCyan>Updating bootstrap info, Retries: " + retries.ToString()));
                     System.Threading.Thread.Sleep(2000); // 2 sec
                 }
             }
