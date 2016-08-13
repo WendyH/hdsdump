@@ -67,7 +67,7 @@ namespace hdsdump
         }
 
         public static void FatalExceptionObject(object exceptionObject) {
-            if (!debug) return;
+            //if (!debug) return;
             string msg = exceptionObject.ToString() + "\r\n";
             Exception ex = exceptionObject as Exception;
             if (ex != null) {
@@ -744,8 +744,9 @@ namespace hdsdump
             if (!disposedValue) {
                 if (disposing) {
                     pipeWriter.Close();
-                    pipeStream.Dispose();
-                    pipeHandle.Dispose();
+                    pipeStream.Close();
+                    if (!pipeHandle.IsClosed)
+                        pipeHandle.Close();
                 }
                 pipeStream = null;
                 pipeWriter = null;
@@ -1745,9 +1746,11 @@ namespace hdsdump
                 }
                 this.currentFilesize += datalen;
             } catch (Exception e) {
-                Program.DebugLog("Error while writing to file! Message: "+e.Message);
-                Program.DebugLog("Exception: " + e.ToString());
-                Program.Quit("<c:Red>Error while writing to file! <c:DarkCyan>Message: <c:Magenta>" + e.Message);
+                if (Program.ConsolePresent) {
+                    Program.DebugLog("Error while writing to file! Message: " + e.Message);
+                    Program.DebugLog("Exception: " + e.ToString());
+                    Program.Quit("<c:Red>Error while writing to file! <c:DarkCyan>Message: <c:Magenta>" + e.Message);
+                }
             }
         }
 
