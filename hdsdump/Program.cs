@@ -3,18 +3,15 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using System.Xml;
-using System.Xml.XPath;
-using System.Threading;
-using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 using System.Reflection;
-using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Xml;
 
 namespace hdsdump
 {
@@ -58,83 +55,127 @@ namespace hdsdump
         public static System.Diagnostics.Stopwatch sw;
         public static System.Diagnostics.Process redir2Prog;
 
-		public static void Main(string[] args)
+        private static bool? _consolePresent;
+        public static bool ConsolePresent {
+            get {
+                if (_consolePresent == null) {
+                    _consolePresent = true;
+                    try { int window_height = Console.WindowHeight; } catch { _consolePresent = false; }
+                }
+                return _consolePresent.Value;
+            }
+        }
+
+        public static void FatalExceptionObject(object exceptionObject) {
+            if (!debug) return;
+            string msg = exceptionObject.ToString() + "\r\n";
+            Exception ex = exceptionObject as Exception;
+            if (ex != null) {
+                msg = ex.ToString() + "\r\n";
+            }
+
+            string tempFile = Path.Combine(Path.GetTempPath(), "hdsdump.log");
+            long   length   = 0;
+
+            var    st       = new System.Diagnostics.StackTrace(ex, true);
+            var    frame    = st.GetFrame(st.FrameCount - 1);
+            int    line     = frame.GetFileLineNumber();
+
+            try {
+                if (File.Exists(tempFile))
+                    length = new FileInfo(tempFile).Length;
+                if (length > 1024 * 1024 * 2)
+                    File.Delete(tempFile);
+                File.AppendAllText(tempFile, $"{DateTime.Now.ToString(CultureInfo.CurrentCulture)} Line: {line} {msg}\r\n");
+            } catch {
+                // ingnore
+            }
+        }
+
+        public static void Main(string[] args)
 		{
+            try {
+                AppDomain.CurrentDomain.UnhandledException += (sender, e) => FatalExceptionObject(e.ExceptionObject);
 
-            redirect2prc = Check4Redirect2Process(ref args);
-			CLI cli = new CLI(args);
-            if (cli.chkParam("waitkey"  )) waitkey = true;
-            if (cli.chkParam("nowaitkey")) waitkey = false;
-            if (cli.chkParam("help")) { cli.displayHelp(); Quit(""); }
+                redirect2prc = Check4Redirect2Process(ref args);
+			    CLI cli = new CLI(args);
+                if (cli.chkParam("waitkey"  )) waitkey = true;
+                if (cli.chkParam("nowaitkey")) waitkey = false;
+                if (cli.chkParam("help"     )) { cli.displayHelp(); Quit(""); }
 
-            F4F f4f = new F4F();
-            if (cli.chkParam("duration" )) Int32.TryParse(cli.getParam("duration"), out duration);
-            if (cli.chkParam("filesize" )) Int32.TryParse(cli.getParam("filesize"), out filesize);
-            if (cli.chkParam("threads"  )) Int32.TryParse(cli.getParam("threads" ), out threads );
-            if (cli.chkParam("start"    )) Int32.TryParse(cli.getParam("start"   ), out start   );
-            if (cli.chkParam("auth"     )) f4f.auth    = "?" + cli.getParam("auth");
-            if (cli.chkParam("urlbase"  )) f4f.baseUrl = cli.getParam("urlbase" );
-            if (cli.chkParam("quality"  )) f4f.quality = cli.getParam("quality" );
-            if (cli.chkParam("manifest" )) manifest    = cli.getParam("manifest");
-            if (cli.chkParam("outdir"   )) outDir      = cli.getParam("outdir"  );
-            if (cli.chkParam("outfile"  )) outFile     = cli.getParam("outfile" );
-            if (cli.chkParam("skip"     )) skip        = cli.getParam("skip"    );
-            if (cli.chkParam("logfile"  )) logfile     = cli.getParam("logfile" );
-            if (cli.chkParam("debug"    )) debug     = true;
-            if (cli.chkParam("play"     )) play      = true;
-            if (cli.chkParam("showtime" )) showtime  = true;
-            if (cli.chkParam("showmlink")) showmlink = true;
-            if (cli.chkParam("fproxy"   )) fproxy    = true;
-            if (cli.chkParam("continue" )) fcontinue = true;
-            if (cli.chkParam("post"     )) HTTP.POST = true;
-            if (cli.chkParam("referer"  )) HTTP.Referer       = cli.getParam("referer"  );
-            if (cli.chkParam("cookies"  )) HTTP.Cookies       = cli.getParam("cookies"  );
-            if (cli.chkParam("useragent")) HTTP.Useragent     = cli.getParam("useragent");
-            if (cli.chkParam("username" )) HTTP.Username      = cli.getParam("username" );
-            if (cli.chkParam("password" )) HTTP.Password      = cli.getParam("password" );
-            if (cli.chkParam("proxy"    )) HTTP.Proxy         = cli.getParam("proxy"    );
-            if (cli.chkParam("proxyuser")) HTTP.ProxyUsername = cli.getParam("proxyuser");
-            if (cli.chkParam("proxypass")) HTTP.ProxyPassword = cli.getParam("proxypass");
+                F4F f4f = new F4F();
+                if (cli.chkParam("duration" )) Int32.TryParse(cli.getParam("duration"), out duration);
+                if (cli.chkParam("filesize" )) Int32.TryParse(cli.getParam("filesize"), out filesize);
+                if (cli.chkParam("threads"  )) Int32.TryParse(cli.getParam("threads" ), out threads );
+                if (cli.chkParam("start"    )) Int32.TryParse(cli.getParam("start"   ), out start   );
+                if (cli.chkParam("auth"     )) f4f.auth    = "?" + cli.getParam("auth");
+                if (cli.chkParam("urlbase"  )) f4f.baseUrl = cli.getParam("urlbase" );
+                if (cli.chkParam("quality"  )) f4f.quality = cli.getParam("quality" );
+                if (cli.chkParam("manifest" )) manifest    = cli.getParam("manifest");
+                if (cli.chkParam("outdir"   )) outDir      = cli.getParam("outdir"  );
+                if (cli.chkParam("outfile"  )) outFile     = cli.getParam("outfile" );
+                if (cli.chkParam("skip"     )) skip        = cli.getParam("skip"    );
+                if (cli.chkParam("logfile"  )) logfile     = cli.getParam("logfile" );
+                if (cli.chkParam("debug"    )) debug     = true;
+                if (cli.chkParam("play"     )) play      = true;
+                if (cli.chkParam("showtime" )) showtime  = true;
+                if (cli.chkParam("showmlink")) showmlink = true;
+                if (cli.chkParam("fproxy"   )) fproxy    = true;
+                if (cli.chkParam("continue" )) fcontinue = true;
+                if (cli.chkParam("post"     )) HTTP.POST = true;
+                if (cli.chkParam("referer"  )) HTTP.Referer       = cli.getParam("referer"  );
+                if (cli.chkParam("cookies"  )) HTTP.Cookies       = cli.getParam("cookies"  );
+                if (cli.chkParam("useragent")) HTTP.Useragent     = cli.getParam("useragent");
+                if (cli.chkParam("username" )) HTTP.Username      = cli.getParam("username" );
+                if (cli.chkParam("password" )) HTTP.Password      = cli.getParam("password" );
+                if (cli.chkParam("proxy"    )) HTTP.Proxy         = cli.getParam("proxy"    );
+                if (cli.chkParam("proxyuser")) HTTP.ProxyUsername = cli.getParam("proxyuser");
+                if (cli.chkParam("proxypass")) HTTP.ProxyPassword = cli.getParam("proxypass");
 
-            if (HTTP.Referer == "") RegExMatch(@"^(.*?://.*?/)", manifest, out HTTP.Referer);
+                if (HTTP.Referer == "") RegExMatch(@"^(.*?://.*?/)", manifest, out HTTP.Referer);
 
-            String strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            ShowHeader("HDSdump by WendyH (K-S-V AdobeHDS based) v <c:White>" + strVersion);
+                String strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                ShowHeader("HDSdump by WendyH (K-S-V AdobeHDS based) v <c:White>" + strVersion);
 
-            //if (showmlink) Program.Message("Manifest: <c:Green>" + manifest);
+                //if (showmlink) Program.Message("Manifest: <c:Green>" + manifest);
 
-            if (manifest == "") Program.Quit("<c:Red>Please specify the manifest. (switch '<c:White>-h</c>' or '<c:White>--help</c>' for help message)");
+                if (manifest == "") Program.Quit("<c:Red>Please specify the manifest. (switch '<c:White>-h</c>' or '<c:White>--help</c>' for help message)");
 
-            if (showtime) ShowTimeElapsed("", true);
+                if (showtime) ShowTimeElapsed("", true);
 
-            if (Check4KnownLinks(manifest)) Program.Quit("Done.");
+                if (Check4KnownLinks(manifest)) Program.Quit("Done.");
 
-            if (outFile.IndexOf(@"\\.\pipe\") == 0) f4f.usePipe = true;
-            if (skip != "")
-            {
-                string sH, sM, sS;
-                if (RegExMatch3(@"(\d{2}):(\d{2}):(\d{2})", skip, out sH, out sM, out sS))
-                    f4f.fromTimestamp = (((Int32.Parse(sH) * 60 * 60) + (Int32.Parse(sM) * 60) + Int32.Parse(sS)) * 1000);
+                if (outFile.IndexOf(@"\\.\pipe\") == 0) f4f.usePipe = true;
+                if (skip != "")
+                {
+                    string sH, sM, sS;
+                    if (RegExMatch3(@"(\d{2}):(\d{2}):(\d{2})", skip, out sH, out sM, out sS))
+                        f4f.fromTimestamp = (((Int32.Parse(sH) * 60 * 60) + (Int32.Parse(sM) * 60) + Int32.Parse(sS)) * 1000);
+                }
+                else
+                {
+                    if (fcontinue) f4f.CheckLastTSExistingFile();
+                }
+                f4f.play       = play;
+                f4f.threads    = threads;
+                f4f.duration   = duration;
+                f4f.filesize   = filesize;
+                f4f.redir2Proc = redirect2prc;
+                f4f.start      = start;
+
+                // Disable metadata if it invalidates the stream duration
+                if ((f4f.fromTimestamp > 0) || (start > 0) || (duration > 0) || (filesize > 0))
+                    f4f.metadata = false;
+
+                cli.EchoSetsParameters();
+
+			    f4f.DownloadFragments(manifest);
+                Program.Quit("Done.");
+
+            } catch (Exception huh) {
+                FatalExceptionObject(huh);
             }
-            else
-            {
-                if (fcontinue) f4f.CheckLastTSExistingFile();
-            }
-            f4f.play       = play;
-            f4f.threads    = threads;
-            f4f.duration   = duration;
-            f4f.filesize   = filesize;
-            f4f.redir2Proc = redirect2prc;
-            f4f.start      = start;
 
-            // Disable metadata if it invalidates the stream duration
-            if ((f4f.fromTimestamp > 0) || (start > 0) || (duration > 0) || (filesize > 0))
-                f4f.metadata = false;
-
-            cli.EchoSetsParameters();
-
-			f4f.DownloadFragments(manifest);
-            Program.Quit("Done.");
         }
 
         public static bool Check4KnownLinks(string sLink) {
@@ -170,7 +211,7 @@ namespace hdsdump
                 //if (msg != "") waitkey = true;
                 if (showtime) ShowTimeElapsed("\n\r" + msg);
                 else Message(msg);
-                if (waitkey) { Console.WriteLine("Press any key to continue..."); Console.ReadKey(); }
+                if (waitkey && ConsolePresent) { Console.WriteLine("Press any key to continue..."); Console.ReadKey(); }
             }
             if (redirect2prc) Thread.Sleep(1000);
             Environment.Exit(0);
@@ -178,17 +219,15 @@ namespace hdsdump
 
         public static void ShowHeader(string header)
         {
-            if (play) return;
+            if (play || !ConsolePresent) return;
             string h  = Regex.Replace(header, @"(<c:\w+>|</c>)", "");
-            int width = (Console.WindowWidth/2 + h.Length/2);
-            
+            int width = (Console.WindowWidth / 2 + h.Length / 2);
             Program.Message(String.Format("\n{0," + width.ToString() + "}\n", header));
         }
 
         public static void Message(string msg)
         {
-            if (play) return;
-            //Console.BackgroundColor = ConsoleColor.Black;
+            if (play || !ConsolePresent) return;
             Console.ForegroundColor = ConsoleColor.Gray;
             List<ConsoleColor> colorsStack = new List<ConsoleColor>();
             string[] chars = msg.Split('<'); string spChar = "";
@@ -220,7 +259,7 @@ namespace hdsdump
 
         public static void DebugLog(string msg)
         {
-            if (!Program.debug) return;
+            if (!Program.debug || !ConsolePresent) return;
             if      (Program.logfile == "STDERR") Console.Error.WriteLine(msg);
             else if (Program.logfile == "STDOUT") Console.WriteLine(msg);
             else File.AppendAllText(Program.logfile, msg + "\n");
@@ -258,8 +297,8 @@ namespace hdsdump
         static bool Check4Redirect2Process(ref string[] args)
         {
             string par2proc = "";
-            string pName = "";
-            bool isredir = false;
+            string pName    = "";
+            bool   isredir  = false;
             string par;
             for (int i = 0; i < args.Length; i++)
             {
@@ -268,7 +307,7 @@ namespace hdsdump
                 {
                     i++;
                     isredir = true;
-                    pName = args[i];
+                    pName   = args[i];
                     continue;
                 }
                 if (!isredir) continue;
@@ -278,9 +317,9 @@ namespace hdsdump
             {
                 redir2Prog = new System.Diagnostics.Process();
                 redir2Prog.StartInfo.UseShellExecute = false;
+                redir2Prog.StartInfo.Arguments       = par2proc;
+                redir2Prog.StartInfo.FileName        = pName;
                 redir2Prog.StartInfo.RedirectStandardInput = true;
-                redir2Prog.StartInfo.Arguments = par2proc;
-                redir2Prog.StartInfo.FileName = pName;
                 redir2Prog.Start();
             }
             return isredir;
@@ -436,7 +475,7 @@ namespace hdsdump
                 shrtKey = pair.Key.Split('|')[0].Trim();
                 longKey = pair.Key.Split('|')[1].Trim();
                 if (shrtKey=="")
-                    Program.Message(String.Format("     <c:White>--{2,-10}</c><param> <c:DarkCyan>{1,-7}", longKey, pair.Value));
+                    Program.Message(String.Format("     <c:White>--{0,-10}</c><param> <c:DarkCyan>{1,-7}", longKey, pair.Value));
                 else
                     Program.Message(String.Format(" <c:White>-{0,-2}</c>|<c:White>--{1,-10}</c><param> <c:DarkCyan>{2,-7}", shrtKey, longKey, pair.Value));
 
@@ -592,12 +631,12 @@ namespace hdsdump
         }
     }
 
-    class F4F
+    class F4F: IDisposable
     {
         public bool           usePipe       = false;
         public FileStream     pipeStream = null;
         public BinaryWriter   pipeWriter = null;
-        public SafeFileHandle pipeHandle = null;
+        public Microsoft.Win32.SafeHandles.SafeFileHandle pipeHandle = null;
 
         public int      manifesttype  = 0; // 0 - hds, 1 - xml playlist, 2 - m3u playlist, 3 - json manifest with template
         public string fragUrlTemplate = "<FRAGURL>Seg<SEGNUM>-Frag<FRAGNUM>";
@@ -693,21 +732,39 @@ namespace hdsdump
             public bool ready;
         }
 
-        [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern int SetStdHandle(int device, IntPtr handle);
-
         public F4F() // constructor
         {
             this.InitDecoder();
         }
 
-        ~F4F()       // destructor
-        {
-            if (this.pipeWriter != null) this.pipeWriter.Close();
-            if (this.pipeStream != null) this.pipeStream.Close();
-            if (this.pipeHandle != null) this.pipeHandle.Close();
+        #region IDisposable Support
+        private bool disposedValue = false; // Для определения избыточных вызовов
+
+        protected virtual void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing) {
+                    pipeWriter.Close();
+                    pipeStream.Dispose();
+                    pipeHandle.Dispose();
+                }
+                pipeStream = null;
+                pipeWriter = null;
+                pipeHandle = null;
+
+                disposedValue = true;
+            }
         }
-            
+
+        ~F4F() {
+            Dispose(false);
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        #endregion
+
         private void InitDecoder()
         {
             if (this.FLVContinue)
@@ -1204,7 +1261,7 @@ namespace hdsdump
                 {
                     retries++;
                     Program.Message(String.Format("{0,-80}\r", "<c:DarkCyan>Updating bootstrap info, Retries: " + retries.ToString()));
-                    System.Threading.Thread.Sleep(2000); // 2 sec
+                    Thread.Sleep(2000); // 2 sec
                 }
             }
         }
@@ -1565,7 +1622,7 @@ namespace hdsdump
                 this.segNum = this.GetSegmentFromFragment(this.fragNum);
 
                 //if (this.duration > 0) 
-                int ts = (int)Math.Round((double)(this.currentTS / 1000));
+                int ts = (int)Math.Round((double)this.currentTS / 1000);
                 sDuration = string.Format("<c:DarkCyan>Current timestamp: </c>{0:00}:{1:00}:{2:00} ", ts / 3600, (ts / 60) % 60, ts % 60);
 
                 if (Program.showtime && !this.live)
@@ -1632,7 +1689,7 @@ namespace hdsdump
                 {
                     Program.DebugLog("Trying to resync with latest available fragment");
                     this.UpdateBootstrapInfo(this.bootstrapUrl);
-                    this.fragNum  = this.fragCount - 1;
+                    //this.fragNum  = this.fragCount - 1;
                     this.lastFrag = this.fragNum;
                 }
                 downloaded++;
@@ -1659,22 +1716,6 @@ namespace hdsdump
             return HexAsBytes; 
         }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern SafeFileHandle CreateFile(
-           String pipeName,
-           uint dwDesiredAccess,
-           uint dwShareMode,
-           IntPtr lpSecurityAttributes,
-           uint dwCreationDisposition,
-           uint dwFlagsAndAttributes,
-           IntPtr hTemplate);
-
-        public const int  INVALID_HANDLE_VALUE = -1;
-        public const uint OPEN_EXISTING = 3;
-        public const uint GENERIC_READ = 0x80000000;
-        public const uint GENERIC_WRITE = 0x40000000;
-        public const uint FILE_FLAG_OVERLAPPED = 0x40000000;
-
         private void Write2File(string outFile, ref byte[] data, FileMode fileMode = FileMode.Append, long pos = 0, long datalen = 0)
         {
             if ((datalen == 0) || (datalen > (data.Length - pos))) datalen = data.Length - pos;
@@ -1688,7 +1729,7 @@ namespace hdsdump
                         if (usePipe) {
                             if (this.pipeStream != null) this.pipeStream.Close();
                             if (this.pipeHandle != null) this.pipeHandle.Close();
-                            this.pipeHandle = CreateFile(outFile, GENERIC_WRITE, 0, IntPtr.Zero, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, IntPtr.Zero);
+                            this.pipeHandle = NativeMethods.CreateFile(outFile, NativeMethods.GENERIC_WRITE, 0, IntPtr.Zero, NativeMethods.OPEN_EXISTING, NativeMethods.FILE_FLAG_OVERLAPPED, IntPtr.Zero);
                             if (this.pipeHandle.IsInvalid) Program.Quit("<c:Red>Cannot create pipe for writting.");
                             this.pipeStream = new FileStream(this.pipeHandle, FileAccess.Write, 4096, true);
                             this.pipeWriter = new BinaryWriter(this.pipeStream);
@@ -2038,9 +2079,8 @@ namespace hdsdump
                 }
                 fragPos += totalTagLen;
             }
-            this.currentDuration = (int)Math.Round((double)(packetTS / 1000));
+            this.currentDuration = (int)Math.Round((double)packetTS / 1000);
         }
-
     }
 
     public static class HttpWebResponseExt {
