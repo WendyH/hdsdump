@@ -1033,17 +1033,17 @@ namespace hdsdump
                 }
             }
 
-            string xmlText = cc.responseText;
+            string xmlText = ValidateXML(cc.responseText);
             if (xmlText.IndexOf("</") < 0)
                 Program.Quit("<c:Red>Error loading manifest: <c:Green>" + manifestUrl);
             XmlDocument xmldoc = new XmlDocument();
             try {
                 xmldoc.LoadXml(xmlText);
-            } catch {
+            } catch (Exception e) {
                 if (Regex.IsMatch(xmlText, @"<html.*?<body", RegexOptions.Singleline)) {
                     Program.Quit("<c:Red>Error loading manifest. Url redirected to html page. Check the manifest url.");
                 } else {
-                    Program.Quit("<c:Red>Error loading manifest. It's no valid xml file.");
+                    Program.Quit("<c:Red>Error loading manifest. It's no valid xml file.\n"+e.Message);
                 }
             }
             nsMgr = new XmlNamespaceManager(xmldoc.NameTable);
@@ -2084,6 +2084,12 @@ namespace hdsdump
             }
             this.currentDuration = (int)Math.Round((double)packetTS / 1000);
         }
+
+        public string ValidateXML(string sXML) {
+            sXML = Regex.Replace(sXML, "&(?!amp;)", "&amp;");
+            return sXML;
+        }
+
     }
 
     public static class HttpWebResponseExt {
