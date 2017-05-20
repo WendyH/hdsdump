@@ -27,7 +27,8 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -75,6 +76,55 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AkamaiDecryptor.cs" />
+    <Compile Include="DecoderLastState.cs" />
+    <Compile Include="f4f\AdobeBootstrapBox.cs" />
+    <Compile Include="f4f\AdobeFragmentRunTable.cs" />
+    <Compile Include="f4f\AdobeSegmentRunTable.cs" />
+    <Compile Include="f4f\Box.cs" />
+    <Compile Include="f4f\AdobeFragmentRandomAccessBox.cs" />
+    <Compile Include="f4f\BoxInfo.cs" />
+    <Compile Include="f4f\FullBox.cs" />
+    <Compile Include="f4f\MediaDataBox.cs" />
+    <Compile Include="f4f\F4FConstants.cs" />
+    <Compile Include="f4f\FragmentAccessInformation.cs" />
+    <Compile Include="f4f\FragmentDurationPair.cs" />
+    <Compile Include="f4f\GlobalRandomAccessEntry.cs" />
+    <Compile Include="f4f\LocalRandomAccessEntry.cs" />
+    <Compile Include="f4f\SegmentFragmentPair.cs" />
+    <Compile Include="f4m\BestEffortFetchInfo.cs" />
+    <Compile Include="f4m\BootstrapInfo.cs" />
+    <Compile Include="f4m\Cue.cs" />
+    <Compile Include="f4m\CueInfo.cs" />
+    <Compile Include="f4m\DRMAdditionalHeader.cs" />
+    <Compile Include="f4m\DVRInfo.cs" />
+    <Compile Include="f4m\F4MUtils.cs" />
+    <Compile Include="f4m\Manifest.cs" />
+    <Compile Include="f4m\Media.cs" />
+    <Compile Include="f4m\NetStreamUtils.cs" />
+    <Compile Include="f4m\StreamingItemType.cs" />
+    <Compile Include="f4m\URL.cs" />
+    <Compile Include="f4m\XMLex.cs" />
+    <Compile Include="flv\FLV.cs" />
+    <Compile Include="flv\AMF0.cs" />
+    <Compile Include="flv\CAmf3Helper.cs" />
+    <Compile Include="flv\CDataHelper.cs" />
+    <Compile Include="flv\FLVData.cs" />
+    <Compile Include="flv\CNameObjDict.cs" />
+    <Compile Include="flv\FLVHeader.cs" />
+    <Compile Include="flv\FLVTag.cs" />
+    <Compile Include="flv\FLVTagAudio.cs" />
+    <Compile Include="flv\FLVTagVideo.cs" />
+    <Compile Include="HDSBinaryReader.cs" />
+    <Compile Include="CLI.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="F4F.cs" />
+    <Compile Include="HDSBinaryWriter.cs" />
+    <Compile Include="HDSDownloader.cs" />
+    <Compile Include="HDSWorker.cs" />
+    <Compile Include="HDSDumper.cs" />
+    <Compile Include="HTTP.cs" />
+    <Compile Include="HttpWebResponseExt.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -100,6 +150,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if "$(ConfigurationName)"=="Release" sign.bat</PostBuildEvent>
