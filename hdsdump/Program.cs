@@ -94,7 +94,6 @@ namespace hdsdump
                 if (cli.ChkParam("waitkey"  )) waitkey = true;
                 if (cli.ChkParam("nowaitkey")) waitkey = false;
                 if (cli.ChkParam("help"     )) { cli.DisplayHelp(); Quit(""); }
-                if (cli.ChkParam("duration" )) uint.TryParse(cli.GetParam("duration"), out duration);
                 if (cli.ChkParam("filesize" )) uint.TryParse(cli.GetParam("filesize"), out filesize);
                 if (cli.ChkParam("threads"  )) int .TryParse(cli.GetParam("threads" ), out threads );
                 if (cli.ChkParam("start"    )) uint.TryParse(cli.GetParam("start"   ), out start   );
@@ -107,6 +106,7 @@ namespace hdsdump
                 if (cli.ChkParam("outfile"  )) outFile     = cli.GetParam("outfile" );
                 if (cli.ChkParam("logfile"  )) logfile     = cli.GetParam("logfile" );
                 if (cli.ChkParam("skip"     )) fromTimestamp = GetTimestampFromString(cli.GetParam("skip"));
+                if (cli.ChkParam("duration" )) duration      = GetTimestampFromString(cli.GetParam("duration"));
                 if (cli.ChkParam("debug"    )) debug     = true;
                 if (cli.ChkParam("play"     )) play      = true;
                 if (cli.ChkParam("showtime" )) showtime  = true;
@@ -162,7 +162,8 @@ namespace hdsdump
                 Check4KnownLinks(ref manifestUrl);
 
                 bool usePipe = outFile.IndexOf(@"\\.\pipe\") == 0;
-
+                cli.Params["threads"] = threads.ToString();
+                cli.Params["outfile"] = outFile;
                 cli.EchoSetsParameters();
 
                 if (!cli.ChkParam("oldmethod")) {
@@ -172,7 +173,7 @@ namespace hdsdump
                     HdsDumper.FLVFile.play       = play;
                     HdsDumper.FLVFile.usePipe    = usePipe;
                     HdsDumper.Downloader.maxThreads = threads;
-                    HdsDumper.duration = duration * 1000;
+                    HdsDumper.duration = duration;
                     HdsDumper.filesize = filesize;
                     HdsDumper.start    = start;
                     HdsDumper.auth     = auth;
@@ -184,16 +185,23 @@ namespace hdsdump
                     HdsDumper.testalt  = testalt;
                     HdsDumper.fromTimestamp = fromTimestamp;
                     HdsDumper.sessionKey = sessionKey;
+
+                    if (ConsolePresent) {
+                        Console.CancelKeyPress += delegate {
+                            HdsDumper?.FixFileMetadata();
+                        };
+                    }
+
                     try {
                         Message("Processing manifest info...");
                         HdsDumper.StartDownload(manifestUrl);
                     } catch (Exception e) {
                         Message("<c:Red>" + e.Message);
                     } finally {
+                        Message("");
                         HdsDumper.FixFileMetadata();
                     }
                     if (!string.IsNullOrEmpty(HdsDumper.Status)) {
-
                         Quit(HdsDumper.Status);
                     } else 
                         Quit("Done.");
@@ -233,12 +241,29 @@ namespace hdsdump
         }
 
         private static uint GetTimestampFromString(string time) {
-            uint timestamp = 0;
-            var m = Regex.Match(time, @"(\d+):(\d+):(\d+)");
-            if (m.Success) {
-                timestamp = (uint)(((Int32.Parse(m.Groups[1].Value) * 60 * 60) + (Int32.Parse(m.Groups[2].Value) * 60) + Int32.Parse(m.Groups[3].Value)) * 1000);
+            int d=0, h=0, m=0, s=0, ms = 0;
+            if (time.IndexOf(':') > 0) {
+                TryRegexInt(time, @".*\d+:\d+[\.,](\d+)", ref ms);
+                TryRegexInt(time, @".*\d+:(\d+)"    , ref s);
+                TryRegexInt(time, @".*(\d+):\d+"    , ref m);
+                TryRegexInt(time, @".*(\d+):\d+:\d+", ref h);
+            } else if (Regex.IsMatch(time.Trim(), @"^\d+$")) {
+                s = Int32.Parse(time.Trim());
+            } else {
+                TryRegexInt(time, @"(\d+)s", ref s);
+                TryRegexInt(time, @"(\d+)m", ref m);
+                TryRegexInt(time, @"(\d+)h", ref h);
+                TryRegexInt(time, @"(\d+)d", ref d);
             }
-            return timestamp;
+            TimeSpan ts = new TimeSpan(d, h, m, s, ms);
+            return (uint)ts.TotalMilliseconds;
+        }
+
+        private static bool TryRegexInt(string text, string pattern, ref int val, RegexOptions options = RegexOptions.None) {
+            var match = Regex.Match(text, pattern);
+            if (match.Success)
+                val = Int32.Parse(match.Groups[1].Value);
+            return match.Success;
         }
 
         private static void Check4KnownLinks(ref string sLink) {

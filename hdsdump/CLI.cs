@@ -24,16 +24,16 @@ namespace hdsdump {
                 new Dictionary<string,string> {
 					// Switches with parameters
                     {"a |auth"     , "authentication string for fragment requests (add '?' with parameter to end manifest url)"},
-                    {"s |duration" , "stop live recording after specified number of seconds"},
-                    {"fs|filesize" , "split output file in chunks of specified size (MB)"},
-                    {"m |manifest" , "manifest or playlist file for downloading of fragments"},
-                    {"b |urlbase"  , "base url for relative path in playlist"},
+                    {"t |duration" , "stop dumping after specified time in the file (hh:mm:ss)"},
+                    {"fs|filesize" , "limit size of the output file"},
+                    {"m |manifest" , "path or url to manifest file for dumping stream (f4m)"},
+                    {"b |urlbase"  , "base url for relative path in manifest"},
                     {"od|outdir"   , "destination folder for output file"},
                     {"o |outfile"  , "filename to use for output file"},
                     {"th|threads"  , "number of threads to download fragments"},
                     {"q |quality"  , "selected quality level (low|medium|high) or exact bitrate"},
+                    {"ss|skip"     , "skip time hh:mm:ss"},
                     {"f |start"    , "start from specified fragment"},
-                    {"t |skip"     , "skip time hh:mm:ss"},
                     {"lf|logfile"  , "file for debug output"},
                     {"ua|useragent", "user-Agent to use for emulation of browser requests"},
                     {"re|referer"  , "referer in the headers http requests"},
@@ -50,7 +50,7 @@ namespace hdsdump {
                 }
             };
 
-        private Dictionary<string, string> Params = new Dictionary<string, string> { };
+        public Dictionary<string, string> Params = new Dictionary<string, string> { };
 
         public CLI(string[] argv) {
             // Parse params
@@ -113,7 +113,7 @@ namespace hdsdump {
                 }
             }
             if (sParameters != "") Program.Message(String.Format("<c:DarkCyan>Parameters:</c> <c:DarkGreen>{0,-10}", sParameters));
-            if (sValues != "") Program.Message(sValues + "\n\r");
+            if (sValues     != "") Program.Message(sValues + "\n\r");
         }
 
         public bool ChkParam(string name) {

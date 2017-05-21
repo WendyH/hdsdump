@@ -81,7 +81,9 @@ namespace hdsdump.flv {
             tag.Timestamp = br.ReadUInt24() + (uint)(br.ReadByte() << 24);
             uint StreamID = br.ReadUInt24();
             tag.Data      = br.ReadBytes((int)dataSize);
-            tag.SizeOfPreviousPacket = br.ReadUInt32();
+            if (br.BytesAvailable > 3) {
+                tag.SizeOfPreviousPacket = br.ReadUInt32();
+            }
             return tag;
         }
 

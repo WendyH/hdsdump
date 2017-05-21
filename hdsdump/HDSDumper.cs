@@ -62,10 +62,10 @@ namespace hdsdump {
             }
         }
 
-        private int _currentTime;
-        private int _mediaTime;
-        private int _alternateTime;
-        private const int INVALID_TIME = -1;
+        private uint _currentTime;
+        private uint _mediaTime;
+        private uint _alternateTime;
+        private const uint INVALID_TIME = 0xFFFFFFFF;
 
         private int droppedAudioFrames;
         private int droppedVideoFrames;
@@ -73,6 +73,8 @@ namespace hdsdump {
 
         AkamaiDecryptor AD1;
         AkamaiDecryptor AD2;
+        Timer UpdateStatusTimer;
+        int UpdateStatusInterval = 1000;
 
         public void StartDownload(string manifestUrl) {
             GetManifestAndSelectMedia(manifestUrl);
@@ -81,6 +83,10 @@ namespace hdsdump {
             var DecoderState = new DecoderLastState();
             bool useAltAudio = selectedMediaAlt != null;
             TagsFilter tagFilter = TagsFilter.ALL;
+
+            if (UpdateStatusTimer == null) {
+                UpdateStatusTimer = new Timer(ShowDownloadStatus, null, 0, UpdateStatusInterval);
+            }
 
             if (useAltAudio) {
                 tagFilter = TagsFilter.VIDEO; // only video for main media if alternate media is selected
@@ -114,7 +120,7 @@ namespace hdsdump {
                     }
 
                     if (needSynchronizationAudio && (_mediaTime != INVALID_TIME || _alternateTime != INVALID_TIME)) {
-                        int alternateSynchronizationTime = _alternateTime != INVALID_TIME ? _alternateTime : _mediaTime;
+                        uint alternateSynchronizationTime = _alternateTime != INVALID_TIME ? _alternateTime : _mediaTime;
                         alternateTag = Downloader.SeekAudioByTime(selectedMediaAlt, alternateSynchronizationTime);
                         if (alternateTag != null) {
                             needSynchronizationAudio = false;
@@ -133,9 +139,6 @@ namespace hdsdump {
                         AD2 = new AkamaiDecryptor();
                     }
                     AD2.DecryptFLVTag(alternateTag, manifest.baseURL, auth);
-                }
-
-                if (mediaTag != null) {
                 }
 
                 if (ShouldFilterTag(mediaTag, tagFilter)) {
@@ -161,20 +164,20 @@ namespace hdsdump {
 
                 if (!useAltAudio) {
                     if (mediaTag != null) {
-                        _currentTime = (int)mediaTag.Timestamp;
+                        _currentTime = mediaTag.Timestamp;
                         FLVFile.Write(mediaTag);
                         mediaTag = null;
                     }
 
                 } else {
                     if (_mediaTime != INVALID_TIME || _alternateTime != INVALID_TIME) {
-                        if (alternateTag != null && (alternateTag.Timestamp >= _currentTime) && (alternateTag.Timestamp <= _mediaTime)) {
-                            _currentTime = (int)alternateTag.Timestamp;
+                        if (alternateTag != null && (alternateTag.Timestamp >= _currentTime || _currentTime == INVALID_TIME) && (alternateTag.Timestamp <= _mediaTime)) {
+                            _currentTime = alternateTag.Timestamp;
                             FLVFile.Write(alternateTag);
                             alternateTag = null;
 
-                        } else if (mediaTag != null && (mediaTag.Timestamp >= _currentTime) && (mediaTag.Timestamp <= _alternateTime)) {
-                            _currentTime = (int)mediaTag.Timestamp;
+                        } else if (mediaTag != null && (mediaTag.Timestamp >= _currentTime || _currentTime == INVALID_TIME) && (mediaTag.Timestamp <= _alternateTime)) {
+                            _currentTime = mediaTag.Timestamp;
                             FLVFile.Write(mediaTag);
                             mediaTag = null;
                         }
@@ -184,14 +187,19 @@ namespace hdsdump {
                 if ((duration > 0) && (FLVFile.LastTimestamp >= duration)) { Status = "Duration limit reached" ; break; }
                 if ((filesize > 0) && (FLVFile.Filesize      >= filesize)) { Status = "File size limit reached"; break; }
             }
+            ShowDownloadStatus();
+            if (UpdateStatusTimer != null) {
+                UpdateStatusTimer.Dispose();
+                UpdateStatusTimer = null;
+            }
         }
 
         private void UpdateTimes(FLVTag tag) {
 			if (tag != null) {
 				if (tag is FLVTagAudio) {
-					_alternateTime = (int)tag.Timestamp;
+					_alternateTime = tag.Timestamp;
 				} else {
-					_mediaTime = (int)tag.Timestamp;
+					_mediaTime = tag.Timestamp;
 				}
 			}
 		}
@@ -208,28 +216,28 @@ namespace hdsdump {
 			if (tag == null) return true;
 			
 			// if the timestamp is lower than the current time
-			if (tag.Timestamp < _currentTime) {
-                tag.Timestamp = (uint)_currentTime;
+			if (_currentTime != INVALID_TIME && tag.Timestamp < _currentTime) {
+                tag.Timestamp = _currentTime;
                 //return true;
 			}
 			
 			switch (tag.Type) {
 				case FLVTag.TagType.AUDIO:
 				case FLVTag.TagType.AKAMAI_ENC_AUDIO:
-					return (TagsFilter.AUDIO & filterTags) == 0 || (tag.Timestamp < _alternateTime);
+					return (TagsFilter.AUDIO & filterTags) == 0 || (_alternateTime != INVALID_TIME && tag.Timestamp < _alternateTime);
 				
 				case FLVTag.TagType.VIDEO:
 				case FLVTag.TagType.AKAMAI_ENC_VIDEO:
-					return (TagsFilter.VIDEO & filterTags) == 0 || (tag.Timestamp < _mediaTime);
+					return (TagsFilter.VIDEO & filterTags) == 0 || (_mediaTime != INVALID_TIME && tag.Timestamp < _mediaTime);
 
 			}	
 		
 			return true;
 		}
 
-        private void ShowDownloadStatus(Media media) {
+        private void ShowDownloadStatus(object state = null) {
             string msg;
-            if (media.Bootstrap.live && HDSDownloader.LiveIsStalled) {
+            if (selectedMedia.Bootstrap.live && HDSDownloader.LiveIsStalled) {
                 TimeSpan time = TimeSpan.FromTicks(DateTime.Now.Subtract(HDSDownloader.StartedStall).Ticks);
                 msg = string.Format("          <c:Magenta>Live is stalled...</c> {0:00}:{1:00}:{2:00}   ", time.Hours, time.Minutes, time.Seconds);
                 if (!Program.verbose)
@@ -237,18 +245,22 @@ namespace hdsdump {
                 Program.Message(msg);
                 return;
             }
-            int fragsToDownload = (int)(media.TotalFragments - media.CurrentFragmentIndex + 1);
+            int fragsToDownload = (int)(selectedMedia.TotalFragments - selectedMedia.CurrentFragmentIndex + 1);
             string remaining = "";
-            if (Program.showtime && !media.Bootstrap.live && media.Downloaded > 0 && fragsToDownload > 0) {
-                TimeSpan remainingTimeSpan = TimeSpan.FromTicks(DateTime.Now.Subtract(startTime).Ticks / media.Downloaded * fragsToDownload);
+            if (Program.showtime && !selectedMedia.Bootstrap.live && selectedMedia.Downloaded > 0 && fragsToDownload > 0) {
+                TimeSpan remainingTimeSpan = TimeSpan.FromTicks(DateTime.Now.Subtract(startTime).Ticks / selectedMedia.Downloaded * fragsToDownload);
                 remaining = String.Format("<c:DarkCyan>Time remaining: </c>{0:00}<c:Cyan>:</c>{1:00}<c:Cyan>:</c>{2:00}", remainingTimeSpan.Hours, remainingTimeSpan.Minutes, remainingTimeSpan.Seconds);
             }
             uint fileDur = FLVFile.LastTimestamp / 1000;
-            string fileTimestamp = string.Format("<c:DarkCyan>File duration: </c>{0:00}:{1:00}:{2:00} ", fileDur / 3600, (fileDur / 60) % 60, fileDur % 60);
-            msg = String.Format("{0,-46} {1}{2}", "Downloaded <c:White>" + (media.CurrentFragmentIndex - 1) + "</c>/" + media.TotalFragments + " fragments", fileTimestamp, remaining);
+            string fileTimestamp = string.Format("<c:DarkCyan>File TS: </c>{0:00}:{1:00}:{2:00} ", fileDur / 3600, (fileDur / 60) % 60, fileDur % 60);
+            string msg1 = string.Format("Fragments <c:White>{0}</c>/{1}", selectedMedia.CurrentFragmentIndex - 1, selectedMedia.TotalFragments);
+            msg = string.Format("{0,-46} {1}{2}", msg1, fileTimestamp, remaining);
             if (!Program.verbose)
                 msg += "\r";
             Program.Message(msg);
+            if (selectedMedia.Updating) {
+                Program.Message(string.Format("{0,-26}\r", "<c:DarkCyan>Updating...</c>"));
+            }
         }
 
         private void GetManifestAndSelectMedia(string manifestUrl, int nestedBitrate = 0, int level = 0) {
@@ -337,10 +349,7 @@ namespace hdsdump {
                 FLVFile.onMetaData = new FLVTagScriptBody(selectedMedia.metadata);
             }
 
-            selectedMedia.UpdatingBootstrap      += Media_UpdatingBootstrap;
-            selectedMedia.UpdatingBootstrapRetry += Media_UpdatingBootstrapRetry;
-            selectedMedia.AfterUpdateBootstrap   += Media_AfterUpdateBootstrap;
-            selectedMedia.DownloadedChanged      += SelectedMedia_DownloadedChanged;
+            selectedMedia.AfterUpdateBootstrap += Media_AfterUpdateBootstrap;
 
             selectedMedia.UpdateBootstrapInfo();
 
@@ -403,11 +412,13 @@ namespace hdsdump {
                 if (selected == null && !isAlt) {
                     if (int.TryParse(quality, out int iQuality)) {
                         // search nearest bitrate
-                        while (iQuality >= 0) {
-                            selected = mediaList.Find(i => i.bitrate == iQuality);
-                            if (selected != null)
-                                break;
-                            iQuality--;
+                        int minDiff = int.MaxValue;
+                        foreach(var m in mediaList) {
+                            int diff = Math.Abs(m.bitrate - iQuality);
+                            if (diff < minDiff) {
+                                minDiff  = diff;
+                                selected = m;
+                            }
                         }
                     } else {
                         switch (quality.ToLower()) {
@@ -422,19 +433,11 @@ namespace hdsdump {
         }
 
         #region Events
-        private void SelectedMedia_DownloadedChanged(object sender, EventArgs e) {
-            ShowDownloadStatus(sender as Media);
-        }
-
-        private void Media_UpdatingBootstrapRetry(object sender, UpdatingBootstrapEventArgs args) {
-            Program.Message(string.Format("{0,-26}\r", "<c:DarkCyan>Update: " + args.Retries+"</c>"));
-        }
-
         private void Media_AfterUpdateBootstrap(object sender, EventArgs e) {
             Media media = sender as Media;
             if (media == null) return;
 
-            if (fromTimestamp > 0) {
+            if (fromTimestamp > 0 && media.Bootstrap != null && !media.Bootstrap.live) {
                 media.SetCurrentFragmentIndexByTimestamp(fromTimestamp);
             }
 
@@ -473,12 +476,6 @@ namespace hdsdump {
                 Downloader.AddMediaFragmentToDownload(media, fragIndex);
             }
         }
-
-        private void Media_UpdatingBootstrap(object sender, EventArgs e) {
-            Media media = sender as Media;
-            Program.DebugLog("\nUpdating bootstrap info... Available fragments: " + media.TotalFragments);
-        }
-
         #endregion Events
 
         public XmlNodeEx LoadXml(string manifestUrl) {
@@ -517,39 +514,39 @@ namespace hdsdump {
         }
 
         public static void FixTimestamp(DecoderLastState DecoderState, FLVTag tag) {
-            int lastTS  = DecoderState.prevVideoTS >= DecoderState.prevAudioTS ? DecoderState.prevVideoTS : DecoderState.prevAudioTS;
-            int fixedTS = lastTS + fixWindow;
+            uint lastTS  = DecoderState.prevVideoTS >= DecoderState.prevAudioTS ? DecoderState.prevVideoTS : DecoderState.prevAudioTS;
+            uint fixedTS = lastTS + (uint)fixWindow;
 
             if ((DecoderState.baseTS == DecoderLastState.INVALID_TIMESTAMP) && ((tag.Type == FLVTag.TagType.AUDIO) || (tag.Type == FLVTag.TagType.VIDEO)))
-                DecoderState.baseTS = (int)tag.Timestamp;
+                DecoderState.baseTS = tag.Timestamp;
 
             if ((DecoderState.baseTS > fixWindow) && (tag.Timestamp >= DecoderState.baseTS))
-                tag.Timestamp -= (uint)DecoderState.baseTS;
+                tag.Timestamp -= DecoderState.baseTS;
 
             if (lastTS != DecoderLastState.INVALID_TIMESTAMP) {
 
-                int timeShift = (int)tag.Timestamp - lastTS;
+                int timeShift = (int)(tag.Timestamp - lastTS);
                 if (timeShift > fixWindow) {
                     Program.DebugLog(string.Format("Timestamp gap detected: PacketTS={0} LastTS={1} Timeshift={2}", tag.Timestamp, lastTS, timeShift));
                     if (DecoderState.baseTS < tag.Timestamp)
-                        DecoderState.baseTS += timeShift - fixWindow;
+                        DecoderState.baseTS += (uint)(timeShift - fixWindow);
                     else
-                        DecoderState.baseTS = timeShift - fixWindow;
-                    tag.Timestamp = (uint)fixedTS;
+                        DecoderState.baseTS = (uint)(timeShift - fixWindow);
+                    tag.Timestamp = fixedTS;
                 } else {
-                    lastTS = (int)(tag.Type == FLVTag.TagType.VIDEO ? DecoderState.prevVideoTS : DecoderState.prevAudioTS);
+                    lastTS = tag.Type == FLVTag.TagType.VIDEO ? DecoderState.prevVideoTS : DecoderState.prevAudioTS;
                     if ((lastTS != DecoderLastState.INVALID_TIMESTAMP) && (int)tag.Timestamp < (lastTS - fixWindow)) {
                         if ((DecoderState.negTS != DecoderLastState.INVALID_TIMESTAMP) && ((tag.Timestamp + DecoderState.negTS) < (lastTS - fixWindow)))
                             DecoderState.negTS = DecoderLastState.INVALID_TIMESTAMP;
                         if (DecoderState.negTS == DecoderLastState.INVALID_TIMESTAMP) {
-                            DecoderState.negTS = fixedTS - (int)tag.Timestamp;
+                            DecoderState.negTS = fixedTS - tag.Timestamp;
                             Program.DebugLog(string.Format("Negative timestamp detected: PacketTS={0} LastTS={1} NegativeTS={2}", tag.Timestamp, lastTS, DecoderState.negTS));
                             tag.Timestamp = (uint)fixedTS;
                         } else {
                             if ((tag.Timestamp + DecoderState.negTS) <= (lastTS + fixWindow))
                                 tag.Timestamp += (uint)DecoderState.negTS;
                             else {
-                                DecoderState.negTS = fixedTS - (int)tag.Timestamp;
+                                DecoderState.negTS = fixedTS - tag.Timestamp;
                                 Program.DebugLog(string.Format("Negative timestamp override: PacketTS={0} LastTS={1} NegativeTS={2}", tag.Timestamp, lastTS, DecoderState.negTS));
                                 tag.Timestamp = (uint)fixedTS;
                             }
@@ -558,9 +555,9 @@ namespace hdsdump {
                 }
             }
             if (tag is FLVTagAudio)
-                DecoderState.prevAudioTS = (int)tag.Timestamp;
+                DecoderState.prevAudioTS = tag.Timestamp;
             else
-                DecoderState.prevVideoTS = (int)tag.Timestamp;
+                DecoderState.prevVideoTS = tag.Timestamp;
         }
 
         public void FixFileMetadata() {
@@ -578,10 +575,13 @@ namespace hdsdump {
                         AD1.Dispose();
                     if (AD2 != null)
                         AD2.Dispose();
+                    if (UpdateStatusTimer != null)
+                        UpdateStatusTimer.Dispose();
                 }
                 disposedValue = true;
                 AD1 = null;
                 AD2 = null;
+                UpdateStatusTimer = null;
             }
         }
 

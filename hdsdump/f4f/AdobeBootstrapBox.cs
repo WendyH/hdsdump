@@ -155,8 +155,8 @@ namespace hdsdump.f4f {
 			if (lastValidFdp.duration == 0) {
 				lastValidFdp = fdps[fdps.Count - 2];
 			}
-			
-			int  deltaTime = (int)(currentMediaTime - lastValidFdp.durationAccrued);
+
+            int  deltaTime = (int)(currentMediaTime - lastValidFdp.durationAccrued);
             uint fragCount = (uint)((deltaTime <= 0) ? 0 : (deltaTime / lastValidFdp.duration));
 			return lastValidFdp.firstFragment + fragCount - 1;
 		}

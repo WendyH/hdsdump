@@ -42,9 +42,8 @@ namespace hdsdump {
                 if (Program.verbose)
                     Program.Message(msg);
                 if (media.Bootstrap.live) {
-                    media.CurrentFragmentIndex = media.TotalFragments;
-                    media.UpdateBootstrapInfo();
-                    //media.Downloaded++;
+                    //media.CurrentFragmentIndex = media.TotalFragments;
+                    tagsStore.Complete = true;
                     Done(media);
                     return;
                 } else {
@@ -76,7 +75,7 @@ namespace hdsdump {
             }
 
             if (Program.verbose)
-                 Program.Message(string.Format("Media: {0}  Downloaded: {1}", media.label, fragIndex));
+                 Program.Message(string.Format("Media: {0}  Downloaded: {1}  Data size: {2}", media.label, fragIndex, data.Length));
 
             media.CurrentFragmentIndex++;
             media.Downloaded++;

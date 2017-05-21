@@ -1,12 +1,12 @@
 ﻿namespace hdsdump {
     public class DecoderLastState {
-        public const int INVALID_TIMESTAMP = -1;
+        public const uint INVALID_TIMESTAMP = 0xFFFFFFFF;
 
-        public int baseTSA = INVALID_TIMESTAMP;
-        public int baseTS  = INVALID_TIMESTAMP;
-        public int negTS   = INVALID_TIMESTAMP;
-        public int prevAudioTS = INVALID_TIMESTAMP;
-        public int prevVideoTS = INVALID_TIMESTAMP;
+        public uint baseTSA = INVALID_TIMESTAMP;
+        public uint baseTS  = INVALID_TIMESTAMP;
+        public uint negTS   = INVALID_TIMESTAMP;
+        public uint prevAudioTS = INVALID_TIMESTAMP;
+        public uint prevVideoTS = INVALID_TIMESTAMP;
         public uint prevTagLength = 0;
         public bool hasVideo;
         public bool hasAudio;

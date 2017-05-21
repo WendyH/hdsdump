@@ -77,10 +77,6 @@ namespace hdsdump {
                         }
                         thread.Start();
 
-                    } else if (media.Bootstrap.live && (media.CurrentFragmentIndex >= media.TotalFragments)) {
-                        Program.DebugLog("Trying to resync selectedMedia with latest available fragment");
-                        media.UpdateBootstrapInfo();
-
                     } else if (workersActive.Count > 0) {
                         Monitor.Wait(waitLock);
 
@@ -113,10 +109,6 @@ namespace hdsdump {
                             workersActiveAlt[thread.ManagedThreadId] = worker;
                         }
                         thread.Start();
-
-                    } else if (media.Bootstrap.live && (media.CurrentFragmentIndex >= media.TotalFragments)) {
-                        Program.DebugLog("Trying to resync alternate Media with latest available fragment");
-                        media.UpdateBootstrapInfo();
 
                     } else if (workersActiveAlt.Count > 0) {
                         Monitor.Wait(waitLockAlt);
@@ -164,10 +156,10 @@ namespace hdsdump {
                     if (tagsStore.Count > 0) {
                         lastTS = tagsStore.lastTS;
                         tag = tagsStore.Dequeue();
-                        if (tagsStore.Count < 1 && tagsStore.Complete) {
-                            lock (FragmentsData) {
-                                FragmentsData[media].Dequeue(); // delete empty TagsStore
-                            }
+                    }
+                    if (tagsStore.Count < 1 && tagsStore.Complete) {
+                        lock (FragmentsData) {
+                            FragmentsData[media].Dequeue(); // delete empty TagsStore
                         }
                     }
                 }
@@ -209,13 +201,13 @@ namespace hdsdump {
             return false;
         }
 
-        public FLVTag SeekAudioByTime(Media media, int time) {
+        public FLVTag SeekAudioByTime(Media media, uint time) {
             while (TagsAvaliable(media)) {
                 var tag = GetNextTag(media, out uint lastTS);
                 if (tag == null)
                     Thread.Sleep(100);
                 else if ((lastTS >= time) && tag is FLVTagAudio) {
-                    var tagsStore = FragmentsData[media].Peek();
+                    var tagsStore  = FragmentsData[media].Peek();
                     var lastHeader = tag;
                     foreach (var t in tagsStore.ToArray()) {
                         if (t.Timestamp > time)

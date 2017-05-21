@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading;
 
 namespace hdsdump.f4m {
 
     /// <summary>
     /// Describes a specific piece of media.
     /// </summary>
-    public class Media {
+    public class Media: IDisposable {
         /// <summary>
         /// Location of the media.
         /// </summary>
@@ -184,6 +185,7 @@ namespace hdsdump.f4m {
 
         private uint _downloaded = 0;
 
+        public bool Updating = false;
         public uint CurrentFragmentIndex = 0;
         public uint LastWritenFragment   = 0;
         public uint TotalFragments       = 0;
@@ -200,59 +202,89 @@ namespace hdsdump.f4m {
         public f4f.AdobeBootstrapBox Bootstrap;
 
         // Events
-        public event EventHandler UpdatingBootstrap;
-        public event EventHandler<UpdatingBootstrapEventArgs> UpdatingBootstrapRetry;
         public event EventHandler AfterUpdateBootstrap;
         public event EventHandler DownloadedChanged;
 
-        // Constants
-        private const int MAX_UPDATE_BOOTSTRAPINFO_RETRIES = 30;
-        private const int UPDATING_INTERVAL = 2000; // 2.0 sec
+        private int bootstrapUpdateInterval = 2000; // 4.0 sec - recommend default fragment duration
+        private int hdsMinimumBootstrapRefreshInterval = 1000;
 
-        public void UpdateBootstrapInfo() {
-            if (!string.IsNullOrEmpty(bootstrapInfo.url)) {
-                int retries = 0;
-                while (CurrentFragmentIndex >= TotalFragments) {
-                    if (retries > MAX_UPDATE_BOOTSTRAPINFO_RETRIES)
-                        throw new InvalidOperationException("Maximum boostrap update retries exceeded");
+        Timer bootstrapUpdateTimer;
 
-                    UpdatingBootstrap?.Invoke(this, EventArgs.Empty);
+        private void StartBootstrapUpdateTimer() {
 
-                    bootstrapInfo.data = HTTP.TryGETData(bootstrapInfo.url, out int retCode, out string status);
-                    if (retCode != 200)
-                        throw new InvalidOperationException("Failed to refresh bootstrap info. Return code: " + retCode + " Status: " + status);
+            if (Bootstrap != null) {
+                //if (Bootstrap.fragmentRunTables.Count > 0) {
+                //    var lastFrag = Bootstrap.GetLastFragment();
+                //    bootstrapUpdateInterval = (int)(lastFrag.duration / Bootstrap.timeScale * 1000);
+                //}
 
-                    Bootstrap = f4f.Box.FindBox(bootstrapInfo.data, f4f.F4FConstants.BOX_TYPE_ABST) as f4f.AdobeBootstrapBox;
-
-                    if (Bootstrap == null)
-                        throw new InvalidOperationException("Failed to parse bootstrap info. Not found the abst box.");
-
-                    // Count total fragments by adding all entries in compactly coded segment table
-                    TotalFragments = Bootstrap.GetFragmentsCount();
-
-                    if (CurrentFragmentIndex >= TotalFragments) {
-                        retries++;
-                        UpdatingBootstrapRetry?.Invoke(this, new UpdatingBootstrapEventArgs(retries)); // show messages
-                        System.Threading.Thread.Sleep(UPDATING_INTERVAL);
-                    }
+                if (bootstrapUpdateInterval < hdsMinimumBootstrapRefreshInterval) {
+                    bootstrapUpdateInterval = hdsMinimumBootstrapRefreshInterval;
                 }
+            }
 
-            } else {
-                Bootstrap = f4f.Box.FindBox(bootstrapInfo.data, f4f.F4FConstants.BOX_TYPE_ABST) as f4f.AdobeBootstrapBox;
+            if (bootstrapUpdateTimer == null) {
+                bootstrapUpdateTimer = new Timer(OnBootstrapUpdateTimer, null, 0, bootstrapUpdateInterval);
+            }
+        }
 
-                if (Bootstrap == null)
-                    throw new InvalidOperationException("Failed to parse bootstrap info. Not found the abst box.");
+        private void DestroyBootstrapUpdateTimer() {
+            if (bootstrapUpdateTimer != null) {
+                bootstrapUpdateTimer.Dispose();
+                bootstrapUpdateTimer = null;
+            }
+        }
+
+        private void OnBootstrapUpdateTimer(object state) {
+            bootstrapInfo.data = HTTP.TryGETData(bootstrapInfo.url, out int retCode, out string status);
+
+            if (retCode != 200) {
+                Program.DebugLog("Error while loading UpdateBootstrapBox. Code: " + retCode + " Status: " + status);
+            }
+
+            UpfateBootstrapBox();
+        }
+
+        private void UpfateBootstrapBox() {
+            if (f4f.Box.FindBox(bootstrapInfo.data, f4f.F4FConstants.BOX_TYPE_ABST) is f4f.AdobeBootstrapBox abst) {
+                Bootstrap = abst;
 
                 // Count total fragments by adding all entries in compactly coded segment table
                 TotalFragments = Bootstrap.GetFragmentsCount();
+
+                if (CurrentFragmentIndex < 1) {
+                    CurrentFragmentIndex = Bootstrap.live ? (TotalFragments - 1) : Bootstrap.GetFirstFragment().firstFragment;
+                }
             }
 
-            if (CurrentFragmentIndex < 1) {
-                CurrentFragmentIndex = Bootstrap.live ? (TotalFragments - 1) : Bootstrap.GetFirstFragment().firstFragment;
-                if (CurrentFragmentIndex < 1)
-                    CurrentFragmentIndex = 1;
-            }
+            if (CurrentFragmentIndex < 1)
+                CurrentFragmentIndex = 1;
+
+            if (CurrentFragmentIndex < TotalFragments)
+                Updating = false;
+
             AfterUpdateBootstrap?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void UpdateBootstrapInfo() {
+            bool itWasLive = Bootstrap != null ? Bootstrap.live : false;
+
+            if (!string.IsNullOrEmpty(bootstrapInfo.url)) {
+                Updating = true;
+                bootstrapInfo.data = HTTP.TryGETData(bootstrapInfo.url, out int retCode, out string status);
+
+                if (retCode != 200) {
+                    Program.DebugLog("Error while loading UpdateBootstrapBox. Code: " + retCode + " Status: " + status);
+                }
+            }
+
+            UpfateBootstrapBox();
+
+            if (!itWasLive && Bootstrap == null)
+                throw new InvalidOperationException("Failed to parse bootstrap info. Not found the abst box.");
+
+            if (Bootstrap != null && Bootstrap.live)
+                StartBootstrapUpdateTimer();
         }
 
         public string GetFragmentUrl(uint fragId) {
@@ -282,7 +314,7 @@ namespace hdsdump.f4m {
         }
 
         public void SetCurrentFragmentIndexByTimestamp(uint timestamp) {
-            if (!Bootstrap.live) {
+            if (Bootstrap != null && !Bootstrap.live) {
                 CurrentFragmentIndex = Bootstrap.GetSegmentByTimestamp(timestamp);
             }
         }
@@ -291,15 +323,24 @@ namespace hdsdump.f4m {
             return "Media: " + label.Trim();
         }
 
-    }
+        #region IDisposable Support
+        private bool disposedValue = false;
 
-    public class UpdatingBootstrapEventArgs : EventArgs {
-        ///<summary>Passed retries updating bootstrap</summary>
-        public int Retries;
-
-        // CONSTRUCTOR
-        public UpdatingBootstrapEventArgs(int retries) {
-            Retries = retries;
+        protected virtual void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing) {
+                    if (bootstrapUpdateTimer != null)
+                        bootstrapUpdateTimer.Dispose();
+                }
+                bootstrapUpdateTimer = null;
+                disposedValue = true;
+            }
         }
+
+        public void Dispose() {
+            Dispose(true);
+        }
+        #endregion
+
     }
 }
