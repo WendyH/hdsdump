@@ -1,4 +1,4 @@
-hdsdump 1.0
+HDSDump 1.0
 ===========
 Up to and including version 1.0.3.7 this is was porting [AdobeHDS.php by K-S-V](https://github.com/K-S-V/Scripts/blob/master/AdobeHDS.php) to .NET 2.0 platform.
 
