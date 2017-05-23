@@ -62,7 +62,7 @@ namespace hdsdump {
             request.Headers.Set(HttpRequestHeader.AcceptLanguage, "en-us,en;q=0.5");
             request.Headers.Set(HttpRequestHeader.AcceptEncoding, "gzip,deflate");
             request.Headers.Set(HttpRequestHeader.AcceptCharset , "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
-            request.Timeout   = 18000;
+            request.Timeout   = 28000;
             request.KeepAlive = true;
             request.CookieContainer = _cookies;
 

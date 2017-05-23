@@ -7,10 +7,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace hdsdump
-{
-    class Program
-    {
+namespace hdsdump {
+    class Program {
         public static bool   debug        = false;
         public static string logfile      = "hdsdump.log";
         public static string manifestUrl  = "";
@@ -32,12 +30,12 @@ namespace hdsdump
         public static bool   fproxy       = false;
         public static bool   showtime     = false;
         public static bool   waitkey      = false;
-        public static bool   showmlink    = false;
         public static bool   fcontinue    = false;
-        public static bool   redirect2prc = false;
         public static bool   verbose      = false;
         public static bool   testalt      = false;
-        
+        public static bool   quiet        = false;
+        public static bool   isRedirected = false;
+
         public static System.Diagnostics.Stopwatch sw;
         public static System.Diagnostics.Process redir2Prog;
 
@@ -78,7 +76,7 @@ namespace hdsdump
             } catch {
                 // ingnore
             }
-            Quit("<c:Red>" + ex.Message);
+            Quit("\r\n<c:Red>" + ex.Message);
         }
 
         public static void Main(string[] args) {
@@ -89,8 +87,8 @@ namespace hdsdump
             try {
                 AppDomain.CurrentDomain.UnhandledException += (sender, e) => FatalExceptionObject(e.ExceptionObject);
 
-                redirect2prc = Check4Redirect2Process(ref args);
-			    CLI cli = new CLI(args);
+                Check4Redirect2Process(ref args);
+                CLI cli = new CLI(args);
                 if (cli.ChkParam("waitkey"  )) waitkey = true;
                 if (cli.ChkParam("nowaitkey")) waitkey = false;
                 if (cli.ChkParam("help"     )) { cli.DisplayHelp(); Quit(""); }
@@ -110,11 +108,11 @@ namespace hdsdump
                 if (cli.ChkParam("debug"    )) debug     = true;
                 if (cli.ChkParam("play"     )) play      = true;
                 if (cli.ChkParam("showtime" )) showtime  = true;
-                if (cli.ChkParam("showmlink")) showmlink = true;
                 if (cli.ChkParam("fproxy"   )) fproxy    = true;
                 if (cli.ChkParam("continue" )) fcontinue = true;
                 if (cli.ChkParam("verbose"  )) verbose   = true;
                 if (cli.ChkParam("testalt"  )) testalt   = true;
+                if (cli.ChkParam("quiet"    )) quiet     = true;
                 if (cli.ChkParam("postdata" )) postData  = cli.GetParam("postdata");
                 if (cli.ChkParam("referer"  )) HTTP.Referer       = cli.GetParam("referer"  );
                 if (cli.ChkParam("cookies"  )) HTTP.Cookies       = cli.GetParam("cookies"  );
@@ -153,9 +151,8 @@ namespace hdsdump
                 String strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 ShowHeader("HDSdump by WendyH v<c:White>" + strVersion);
 
-                //if (showmlink) Program.Message("Manifest: <c:Green>" + manifest);
-
-                if (manifestUrl == "") Program.Quit("<c:Red>Please specify the manifest. (switch '<c:White>-h</c>' or '<c:White>--help</c>' for help message)");
+                if (manifestUrl == "")
+                    Quit("<c:Red>Please specify the manifest. (switch '<c:White>-h</c>' or '<c:White>--help</c>' for help message)");
 
                 if (showtime) ShowTimeElapsed("", true);
 
@@ -163,15 +160,14 @@ namespace hdsdump
 
                 bool usePipe = outFile.IndexOf(@"\\.\pipe\") == 0;
                 cli.Params["threads"] = threads.ToString();
-                cli.Params["outfile"] = outFile;
+                cli.Params["outfile"] = redir2Prog != null ? redir2Prog.ProcessName : (isRedirected ? "<redirected>" : outFile);
                 cli.EchoSetsParameters();
 
                 if (!cli.ChkParam("oldmethod")) {
                     HDSDumper HdsDumper = new HDSDumper();
-                    HdsDumper.FLVFile.outFile    = outDir + outFile;
-                    HdsDumper.FLVFile.redir2Proc = redirect2prc;
-                    HdsDumper.FLVFile.play       = play;
-                    HdsDumper.FLVFile.usePipe    = usePipe;
+                    HdsDumper.FLVFile.outFile = outDir + outFile;
+                    HdsDumper.FLVFile.play    = play;
+                    HdsDumper.FLVFile.usePipe = usePipe;
                     HdsDumper.Downloader.maxThreads = threads;
                     HdsDumper.duration = duration;
                     HdsDumper.filesize = filesize;
@@ -188,6 +184,7 @@ namespace hdsdump
 
                     if (ConsolePresent) {
                         Console.CancelKeyPress += delegate {
+                            HdsDumper?.ShowMessageAtTheEnd();
                             HdsDumper?.FixFileMetadata();
                         };
                     }
@@ -196,9 +193,10 @@ namespace hdsdump
                         Message("Processing manifest info...");
                         HdsDumper.StartDownload(manifestUrl);
                     } catch (Exception e) {
-                        Message("<c:Red>" + e.Message);
+                        HdsDumper.DestroyUpdateStatusTimer();
+                        Message("\r\n<c:Red>" + e.Message);
                     } finally {
-                        Message("");
+                        HdsDumper.ShowMessageAtTheEnd();
                         HdsDumper.FixFileMetadata();
                     }
                     if (!string.IsNullOrEmpty(HdsDumper.Status)) {
@@ -219,7 +217,6 @@ namespace hdsdump
                 //f4f.threads    = threads;
                 f4f.duration   = (int)duration;
                 f4f.filesize   = (int)filesize;
-                f4f.redir2Proc = redirect2prc;
                 f4f.start      = (int)start;
                 f4f.ad.sessionKey = sessionKey;
                 f4f.auth     = auth;
@@ -232,7 +229,7 @@ namespace hdsdump
                     f4f.CheckLastTSExistingFile();
 
                 f4f.DownloadFragments(manifestUrl);
-                Program.Quit("Done.");
+                Quit("Done.");
 
             } catch (Exception huh) {
                 FatalExceptionObject(huh);
@@ -378,28 +375,28 @@ namespace hdsdump
         }
 
         public static void Quit(string msg = "") {
-            if (!play) {
+            if (!quiet) {
                 lock (interfaceLocker) {
                     if (showtime) ShowTimeElapsed("\n\r" + msg);
                     else Message(msg);
                     if (waitkey && ConsolePresent) { Console.WriteLine("Press any key to continue..."); Console.ReadKey(); }
                 }
             }
-            if (redirect2prc) Thread.Sleep(1000);
+            if (redir2Prog != null || isRedirected) Thread.Sleep(1000);
             Environment.Exit(0);
         }
 
         public static void ShowHeader(string header) {
-            if (play || !ConsolePresent) return;
+            if (quiet || !ConsolePresent) return;
             string h  = Regex.Replace(header, @"(<c:\w+>|</c>)", "");
             int width = (Console.WindowWidth / 2 + h.Length / 2);
-            Program.Message(String.Format("\n{0," + width.ToString() + "}\n", header));
+            Message(String.Format("\n{0," + width.ToString() + "}\n", header));
         }
 
         private static object interfaceLocker = new object();
 
         public static void Message(string msg) {
-            if (play || !ConsolePresent) return;
+            if (quiet || !ConsolePresent) return;
             lock (interfaceLocker) {
                 Console.ForegroundColor = ConsoleColor.Gray;
                 List<ConsoleColor> colorsStack = new List<ConsoleColor>();
@@ -474,11 +471,22 @@ namespace hdsdump
                 sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
             } else {
-                if (!play) Program.Message(msg + "\n\r<c:DarkCyan>Time elapsed: <c:DarkGray>" + sw.Elapsed);
+                if (!quiet) Message(msg + "\n\r<c:DarkCyan>Time elapsed: <c:DarkGray>" + sw.Elapsed);
             }
         }
 
         static bool Check4Redirect2Process(ref string[] args) {
+            try {
+                isRedirected = Console.CursorVisible && false;
+            } catch {
+                isRedirected = true;
+            }
+            if (isRedirected) {
+                var streamErr = new StreamWriter(Console.OpenStandardError());
+                streamErr.AutoFlush = true;
+                Console.SetOut(streamErr);
+            }
+
             string par2proc = "";
             string pName    = "";
             bool   isredir  = false;
@@ -495,12 +503,20 @@ namespace hdsdump
                 par2proc += " " + args[i];
             }
             if (isredir) {
+                MatchCollection mc = Regex.Matches(pName, @"%(.*?)%");
+                foreach (Match m in mc) {
+                    string varVal = Environment.GetEnvironmentVariable(m.Groups[1].Value);
+                    pName = pName.Replace(m.Value, varVal);
+                }
                 redir2Prog = new System.Diagnostics.Process();
                 redir2Prog.StartInfo.UseShellExecute = false;
                 redir2Prog.StartInfo.Arguments       = par2proc;
                 redir2Prog.StartInfo.FileName        = pName;
-                redir2Prog.StartInfo.RedirectStandardInput = true;
+                redir2Prog.StartInfo.RedirectStandardInput  = true;
+                redir2Prog.StartInfo.RedirectStandardOutput = false;
                 redir2Prog.Start();
+            } else {
+
             }
             return isredir;
         }

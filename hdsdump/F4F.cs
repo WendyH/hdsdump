@@ -31,7 +31,6 @@ namespace hdsdump {
         public bool   metadata   = true;
         public int    threads    = 1;
         public bool   play       = false;
-        public bool   redir2Proc = false;
         public string quality    = "high";
         public string sessionID  = "";
         public int    segNum      = 1;
@@ -1019,8 +1018,8 @@ namespace hdsdump {
         private void Write2File(string outFile, ref byte[] data, FileMode fileMode = FileMode.Append, long pos = 0, long datalen = 0) {
             if ((datalen == 0) || (datalen > (data.Length - pos))) datalen = data.Length - pos;
             try {
-                if (this.play) {
-                    Stream stdout = (this.redir2Proc) ? Program.redir2Prog.StandardInput.BaseStream : Console.OpenStandardOutput();
+                if (play) {
+                    Stream stdout = (Program.redir2Prog != null) ? Program.redir2Prog.StandardInput.BaseStream : Console.OpenStandardOutput();
                     stdout.Write(data, (int)pos, (int)datalen);
                     stdout.Flush();
                 } else {
