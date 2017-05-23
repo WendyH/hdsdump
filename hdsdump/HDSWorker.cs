@@ -83,7 +83,5 @@ namespace hdsdump {
             Done(media);
         }
 
-
-
     }
 }
