@@ -229,7 +229,7 @@ namespace hdsdump {
         }
     }
 
-    public class TagsStore : Queue<FLVTag> {
+    public class TagsStore: Queue<FLVTag> {
         public bool Complete = false;
         public bool hasVideo = false;
         public bool hasAudio = false;

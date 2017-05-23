@@ -80,10 +80,10 @@ namespace hdsdump {
         }
 
         public static void Main(string[] args) {
-            System.Net.ServicePointManager.UseNagleAlgorithm = true;
+            System.Net.ServicePointManager.UseNagleAlgorithm              = true;
             System.Net.ServicePointManager.CheckCertificateRevocationList = false;
-            System.Net.ServicePointManager.DefaultConnectionLimit = 20;
-            System.Net.ServicePointManager.Expect100Continue = false;
+            System.Net.ServicePointManager.DefaultConnectionLimit         = 20;
+            System.Net.ServicePointManager.Expect100Continue              = false;
             try {
                 AppDomain.CurrentDomain.UnhandledException += (sender, e) => FatalExceptionObject(e.ExceptionObject);
 

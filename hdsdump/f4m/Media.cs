@@ -213,6 +213,7 @@ namespace hdsdump.f4m {
         private void StartBootstrapUpdateTimer() {
 
             if (Bootstrap != null) {
+                // for slow internet - disable sets interval
                 //if (Bootstrap.fragmentRunTables.Count > 0) {
                 //    var lastFrag = Bootstrap.GetLastFragment();
                 //    bootstrapUpdateInterval = (int)(lastFrag.duration / Bootstrap.timeScale * 1000);

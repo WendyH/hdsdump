@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("By WendyH")]
 [assembly: AssemblyProduct("hdsdump")]
-[assembly: AssemblyCopyright("Copyleft GNU GPL v3")]
+[assembly: AssemblyCopyright("(L) GNU GPL v3")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

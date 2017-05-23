@@ -7,7 +7,6 @@ namespace hdsdump.flv {
         public string outFile    = "hdsdump.flv";
         public bool   play       = false;
         public bool   usePipe    = false;
-        public bool   AltMedia   = false;
         public uint   Filesize      = 0;
         public uint   LastTimestamp = 0;
         public uint   SizeAudio     = 0;

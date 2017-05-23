@@ -17,8 +17,8 @@ namespace hdsdump {
                     {"wk|waitkey"  , "wait pressed any key at the end"},
                     {"c |continue" , "continue if possible downloading with exists file"},
                     {"z |oldmethod", "use the old method to download"},
-                    {"v |verbose"  , "show exteneded info while dumping"},
                     {"  |quiet"    , "no output any messages"},
+                    {"v |verbose"  , "show exteneded info while dumping"},
                     {"  |testalt"  , "sets all avaliable media also as alternate"},
                     
                 },

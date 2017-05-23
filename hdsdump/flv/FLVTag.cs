@@ -135,10 +135,9 @@ namespace hdsdump.flv {
             }
         }
 
-
         public enum TagType : int {
-            AUDIO = 0x08,
-            VIDEO = 0x09,
+            AUDIO            = 0x08,
+            VIDEO            = 0x09,
             SCRIPTDATAOBJECT = 0x12,
             AKAMAI_ENC_AUDIO = 0x0A,
             AKAMAI_ENC_VIDEO = 0x0B,

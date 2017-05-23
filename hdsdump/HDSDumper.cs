@@ -38,10 +38,6 @@ namespace hdsdump {
 
         private const int MAX_LEVEL_NESTED_MANIFESTS = 5;
 
-        // CONSTRUCTOR
-        public HDSDumper() {
-        }
-
         public void DetermineAudioVideoPresentInDownloadedFragment() {
             bool determinedVideoAudio = false;
             int  elapsed              = 0;
@@ -378,7 +374,6 @@ namespace hdsdump {
 
             if (selectedMediaAlt != null) {
                 selectedMediaAlt.alternate = true;
-                FLVFile.AltMedia           = true;
                 // Use embedded auth information when available
                 idx = selectedMediaAlt.url.IndexOf('?');
                 if (idx > 0) {
