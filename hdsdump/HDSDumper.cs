@@ -76,12 +76,6 @@ namespace hdsdump {
         Timer UpdateStatusTimer;
         int UpdateStatusInterval = 1000;
 
-        public void DestroyUpdateStatusTimer() {
-            if (UpdateStatusTimer != null)
-                UpdateStatusTimer.Dispose();
-            UpdateStatusTimer = null;
-        }
-
         public void StartDownload(string manifestUrl) {
             GetManifestAndSelectMedia(manifestUrl);
             // downloader already running in UpdateBootstrapInfo()
@@ -193,8 +187,11 @@ namespace hdsdump {
                 if ((duration > 0) && (FLVFile.LastTimestamp >= duration)) { Status = "Duration limit reached" ; break; }
                 if ((filesize > 0) && (FLVFile.Filesize      >= filesize)) { Status = "File size limit reached"; break; }
             }
-            DestroyUpdateStatusTimer();
             ShowDownloadStatus();
+            if (UpdateStatusTimer != null) {
+                UpdateStatusTimer.Dispose();
+                UpdateStatusTimer = null;
+            }
         }
 
         private void UpdateTimes(FLVTag tag) {
@@ -207,14 +204,12 @@ namespace hdsdump {
 			}
 		}
         
-        public void ShowMessageAtTheEnd() {
-            DestroyUpdateStatusTimer();
-            string msg = string.Format("\r\nFile size=<c:Cyan>{0}</c>KiB  Duration=<c:Cyan>{1}</c>  Video=<c:Cyan>{2}</c>KiB  Audio=<c:Cyan>{3}</c>KiB"
-                , FLVFile.Filesize / 1024
-                , FormatTS(FLVFile.LastTimestamp)
-                , FLVFile.SizeVideo / 1024
-                , FLVFile.SizeAudio / 1024); 
-            Program.Message(msg);
+        private void FixTime(FLVTag tag) {
+            if (tag is FLVTagAudio) {
+
+            } else {
+
+            }
         }
 
         private bool ShouldFilterTag(FLVTag tag, TagsFilter filterTags) {
@@ -240,43 +235,32 @@ namespace hdsdump {
 			return true;
 		}
 
-        private string FormatTS(uint ts, bool withMS = false) {
-            TimeSpan time = TimeSpan.FromMilliseconds(ts);
-            if (withMS)
-                return string.Format("{0:00}:{1:00}:{2:00}.{3:00}", time.Hours, time.Minutes, time.Seconds, time.Milliseconds);
-            else
-                return string.Format("{0:00}:{1:00}:{2:00}", time.Hours, time.Minutes, time.Seconds);
-        }
-
         private void ShowDownloadStatus(object state = null) {
             string msg;
             if (selectedMedia.Bootstrap.live && HDSDownloader.LiveIsStalled) {
-                msg = "          <c:Magenta>Live is stalled...</c> " + FormatTS((uint)DateTime.Now.Subtract(HDSDownloader.StartedStall).Ticks);
+                TimeSpan time = TimeSpan.FromTicks(DateTime.Now.Subtract(HDSDownloader.StartedStall).Ticks);
+                msg = string.Format("          <c:Magenta>Live is stalled...</c> {0:00}:{1:00}:{2:00}   ", time.Hours, time.Minutes, time.Seconds);
                 if (!Program.verbose)
                     msg += "\r";
                 Program.Message(msg);
                 return;
             }
-
-            msg = string.Format("frag=<c:White>{0}</c>/{1} frames={2} TS={3} size={4}KiB time={5} drop={6}"
-                , selectedMedia.CurrentFragmentIndex - 1
-                , selectedMedia.TotalFragments
-                , FLVFile.Frames
-                , FormatTS(_currentTime)
-                , FLVFile.Filesize / 1024
-                , FormatTS(FLVFile.LastTimestamp)
-                , totalDroppedFrames);
-
             int fragsToDownload = (int)(selectedMedia.TotalFragments - selectedMedia.CurrentFragmentIndex + 1);
             string remaining = "";
             if (Program.showtime && !selectedMedia.Bootstrap.live && selectedMedia.Downloaded > 0 && fragsToDownload > 0) {
                 TimeSpan remainingTimeSpan = TimeSpan.FromTicks(DateTime.Now.Subtract(startTime).Ticks / selectedMedia.Downloaded * fragsToDownload);
                 remaining = String.Format("<c:DarkCyan>Time remaining: </c>{0:00}<c:Cyan>:</c>{1:00}<c:Cyan>:</c>{2:00}", remainingTimeSpan.Hours, remainingTimeSpan.Minutes, remainingTimeSpan.Seconds);
             }
-            msg += remaining;
+            uint fileDur = FLVFile.LastTimestamp / 1000;
+            string fileTimestamp = string.Format("<c:DarkCyan>File TS: </c>{0:00}:{1:00}:{2:00} ", fileDur / 3600, (fileDur / 60) % 60, fileDur % 60);
+            string msg1 = string.Format("Fragments <c:White>{0}</c>/{1}", selectedMedia.CurrentFragmentIndex - 1, selectedMedia.TotalFragments);
+            msg = string.Format("{0,-46} {1}{2}", msg1, fileTimestamp, remaining);
             if (!Program.verbose)
                 msg += "\r";
             Program.Message(msg);
+            if (selectedMedia.Updating) {
+                Program.Message(string.Format("{0,-26}\r", "<c:DarkCyan>Updating...</c>"));
+            }
         }
 
         private void GetManifestAndSelectMedia(string manifestUrl, int nestedBitrate = 0, int level = 0) {
@@ -395,7 +379,6 @@ namespace hdsdump {
             if (collectBitrates)
                 avaliable = " ";
             Media selected = null;
-            string[] langs = lang.ToLower().Split(','); int indexLang = 99;
             // sorting media by quality
             mediaList.Sort((a, b) => b.bitrate.CompareTo(a.bitrate));
             if (mediaList.Count > 0) {
@@ -405,20 +388,15 @@ namespace hdsdump {
                             avaliable += media.label + " ";
                         Program.DebugLog(String.Format(" {0,-8}{1}", media.label, media.url));
                         //selected by language, codec, bitrate or label
-                        if (!string.IsNullOrEmpty(alt)) {
+                        if (!string.IsNullOrEmpty(lang) && media.lang.ToLower() == lang.ToLower()) {
+                            selected = media;
+                        } else if (!string.IsNullOrEmpty(alt)) {
                             string altLow = alt.ToLower();
                             if (altLow == media.label.ToLower() || altLow == media.lang.ToLower() || altLow == media.bitrate.ToString() || altLow == media.streamId.ToLower()) {
                                 selected = media;
                             } else if (media.audioCodec.ToLower().IndexOf(altLow) >= 0) {
                                 selected = media;
                             } else if (media.videoCodec.ToLower().IndexOf(altLow) >= 0) {
-                                selected = media;
-                            }
-                        }
-                        if (!string.IsNullOrEmpty(lang)) {
-                            int idx = Array.IndexOf(langs, media.lang.ToLower());
-                            if (idx >= 0 && idx < indexLang) {
-                                indexLang = idx;
                                 selected = media;
                             }
                         }

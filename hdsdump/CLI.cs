@@ -15,12 +15,11 @@ namespace hdsdump {
                     {"fp|fproxy"   , "force proxy for downloading of fragments"},
                     {"  |postdata" , "data for the POST method for http request"},
                     {"wk|waitkey"  , "wait pressed any key at the end"},
+                    {"sl|showmlink", "display manifest link at the start (deprecated)"},
                     {"c |continue" , "continue if possible downloading with exists file"},
                     {"z |oldmethod", "use the old method to download"},
                     {"v |verbose"  , "show exteneded info while dumping"},
-                    {"  |quiet"    , "no output any messages"},
                     {"  |testalt"  , "sets all avaliable media also as alternate"},
-                    
                 },
                 new Dictionary<string,string> {
 					// Switches with parameters
@@ -53,13 +52,6 @@ namespace hdsdump {
 
         public Dictionary<string, string> Params = new Dictionary<string, string> { };
 
-        private void Error(string msg) {
-            if (Program.isRedirected || Program.redir2Prog != null)
-                Program.Message(msg);
-            else
-                Program.Quit(msg);
-        }
-
         public CLI(string[] argv) {
             // Parse params
             string doubleParam = "", doubleKey = "", arg, shrtKey, longKey;
@@ -69,9 +61,9 @@ namespace hdsdump {
                 bool isparam = Regex.IsMatch(arg, "^-");
                 if (isparam) arg = Regex.Replace(arg, "^--?", "");
                 if ((doubleParam != "") && isparam)
-                    Error("<param> <c:Red>expected after '<c:White>" + argv[i - 1] + "</c>' switch <c:DarkCyan>(" + ACCEPTED[1][doubleKey] + ")</c>\n");
+                    Program.Quit("<param> <c:Red>expected after '<c:White>" + argv[i - 1] + "</c>' switch <c:DarkCyan>(" + ACCEPTED[1][doubleKey] + ")</c>\n");
                 else if ((doubleParam == "") && !isparam)
-                    Error("'<c:Green>" + argv[i] + "</c>' <c:Red>is an invalid switch, use <c:White>-h</c> or <c:White>--help</c> to display valid switches\n");
+                    Program.Quit("'<c:Green>" + argv[i] + "</c>' <c:Red>is an invalid switch, use <c:White>-h</c> or <c:White>--help</c> to display valid switches\n");
                 else if ((doubleParam == "") && isparam) {
                     bool keyFound = false;
                     foreach (KeyValuePair<string, string> pair in ACCEPTED[0]) {
@@ -91,12 +83,11 @@ namespace hdsdump {
                                 break;
                             }
                         }
-                    if (!keyFound) {
-                        Error("<c:Red>There's no <c:Green>" + argv[i] + "</c> switch, use <c:White>-h</c> or <c:White>--help</c> to display all switches\n");
-                    }
+                    if (!keyFound)
+                        Program.Quit("<c:Red>There's no <c:Green>" + argv[i] + "</c> switch, use <c:White>-h</c> or <c:White>--help</c> to display all switches\n");
                     if (Params.ContainsKey(arg)) {
                         if (arg != "headers")
-                            Error("'<c:White>" + argv[i] + "</c>' <c:Red>switch cannot occur more than once\n");
+                            Program.Quit("'<c:White>" + argv[i] + "</c>' <c:Red>switch cannot occur more than once\n");
                     } else 
                         Params[arg] = "[1]";
 

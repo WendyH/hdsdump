@@ -7,16 +7,14 @@ namespace hdsdump.flv {
         public string outFile    = "hdsdump.flv";
         public bool   play       = false;
         public bool   usePipe    = false;
+        public bool   redir2Proc = false;
         public bool   AltMedia   = false;
         public uint   Filesize      = 0;
         public uint   LastTimestamp = 0;
-        public uint   SizeAudio     = 0;
-        public uint   SizeVideo     = 0;
 
         public bool FLVHeaderWritten = false;
         public bool hasAudio = false;
         public bool hasVideo = false;
-        public int  Frames   = 0;
 
         public FLVTagScriptBody onMetaData;
 
@@ -48,8 +46,6 @@ namespace hdsdump.flv {
                     else if (AAC_HeaderWritten && tagAudio.isAACSequenceHeader)
                         return;
 
-                    SizeAudio += tag.DataSize;
-
                 } else if (tag is FLVTagVideo) {
                     var tagVideo = tag as FLVTagVideo;
                     if (!AVC_HeaderWritten && tagVideo.codecID == FLVTagVideo.CodecID.AVC && tagVideo.avcPacketType == FLVTagVideo.AVCPacketType.SEQUENCE_HEADER)
@@ -57,7 +53,6 @@ namespace hdsdump.flv {
                     else if (AVC_HeaderWritten && tagVideo.codecID == FLVTagVideo.CodecID.AVC && tagVideo.avcPacketType == FLVTagVideo.AVCPacketType.SEQUENCE_HEADER)
                         return;
 
-                    SizeVideo += tag.DataSize;
                 }
 
                 HDSDumper.FixTimestamp(DecoderState, tag);
@@ -66,27 +61,15 @@ namespace hdsdump.flv {
                     LastTimestamp = tag.Timestamp;
 
                 WriteData(tag.GetBytes());
-
-                Frames++;
             }
         }
 
         private void WriteData(byte[] data, FileMode fileMode = FileMode.Append) {
             try {
-                if (Program.redir2Prog != null) {
-
-                    if (Program.redir2Prog.HasExited)
-                        throw new InvalidOperationException("Redirected process was exited");
-
-                    Stream stream = Program.redir2Prog.StandardInput.BaseStream;
-                    stream.Write(data, 0, data.Length);
-                    stream.Flush();
-
-                } else if (play || Program.isRedirected) {
-                    Stream stdout = Console.OpenStandardOutput();
+                if (play) {
+                    Stream stdout = (redir2Proc) ? Program.redir2Prog.StandardInput.BaseStream : Console.OpenStandardOutput();
                     stdout.Write(data, 0, data.Length);
                     stdout.Flush();
-
                 } else {
                     if (Writer == null) {
                         if (usePipe) {
@@ -117,10 +100,7 @@ namespace hdsdump.flv {
         }
 
         private void WriteFlvHeader() {
-            Filesize  = 0;
-            Frames    = 0;
-            SizeAudio = 0;
-            SizeVideo = 0;
+            Filesize = 0;
             FLVHeader flvHeader = new FLVHeader() {
                 HasAudio = hasAudio,
                 HasVideo = hasVideo
@@ -152,7 +132,7 @@ namespace hdsdump.flv {
         }
 
         public void FixFileMetadata() {
-            if (play || Program.redir2Prog != null || Program.isRedirected || !File.Exists(outFile)) return;
+            if (play || redir2Proc || !File.Exists(outFile)) return;
             if (Writer != null) {
                 Writer.Flush();
                 Writer.Close();
