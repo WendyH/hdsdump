@@ -182,7 +182,7 @@ namespace hdsdump {
                                 audioInfo =
                                     "<c:DarkGreen>" + FLVTagAudio.FormatToString(tagStore.AudioFormat) +
                                     " " + FLVTagAudio.RateToString(tagStore.AudioRate) +
-                                    " " + (tagStore.AudioChannels == FLVTagAudio.SoundChannels.MONO ? "Mono" : "Stereo");
+                                    " " + (tagStore.AudioChannels == FLVTagAudio.Channels.MONO ? "Mono" : "Stereo");
                             } else {
                                 audioInfo = "<c:DarkRed>None";
                             }
@@ -231,8 +231,8 @@ namespace hdsdump {
                             break;
                         if (t is FLVTagAudio) {
                             var audio = t as FLVTagAudio;
-                            if (audio.soundFormat == FLVTagAudio.SoundFormat.AAC) {
-                                if (audio.isAACSequenceHeader)
+                            if (audio.SoundFormat == FLVTagAudio.Format.AAC) {
+                                if (audio.IsAACSequenceHeader)
                                     lastHeader = t;
                             } else {
                                 lastHeader = t;
@@ -253,10 +253,10 @@ namespace hdsdump {
         public uint lastTS   = 0;
         public bool isAkamaiEncrypted = false;
         public AdobeFragmentRandomAccessBox ARFA;
-        public FLVTagAudio.SoundFormat   AudioFormat;
-        public FLVTagAudio.SoundChannels AudioChannels;
-        public FLVTagAudio.SoundRate     AudioRate;
-        public FLVTagVideo.CodecID       VideoCodec;
+        public FLVTagAudio.Format   AudioFormat;
+        public FLVTagAudio.Channels AudioChannels;
+        public FLVTagAudio.Rate     AudioRate;
+        public FLVTagVideo.Codec       VideoCodec;
     }
 
 }

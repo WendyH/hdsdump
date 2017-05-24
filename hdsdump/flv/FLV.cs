@@ -42,18 +42,18 @@ namespace hdsdump.flv {
 
                 if (tag is FLVTagAudio) {
                     var tagAudio = tag as FLVTagAudio;
-                    if (!AAC_HeaderWritten && tagAudio.isAACSequenceHeader)
+                    if (!AAC_HeaderWritten && tagAudio.IsAACSequenceHeader)
                         AAC_HeaderWritten = true;
-                    else if (AAC_HeaderWritten && tagAudio.isAACSequenceHeader)
+                    else if (AAC_HeaderWritten && tagAudio.IsAACSequenceHeader)
                         return;
 
                     SizeAudio += tag.DataSize;
 
                 } else if (tag is FLVTagVideo) {
                     var tagVideo = tag as FLVTagVideo;
-                    if (!AVC_HeaderWritten && tagVideo.codecID == FLVTagVideo.CodecID.AVC && tagVideo.avcPacketType == FLVTagVideo.AVCPacketType.SEQUENCE_HEADER)
+                    if (!AVC_HeaderWritten && tagVideo.CodecID == FLVTagVideo.Codec.AVC && tagVideo.AvcPacketType == FLVTagVideo.AVCPacket.SEQUENCE_HEADER)
                         AVC_HeaderWritten = true;
-                    else if (AVC_HeaderWritten && tagVideo.codecID == FLVTagVideo.CodecID.AVC && tagVideo.avcPacketType == FLVTagVideo.AVCPacketType.SEQUENCE_HEADER)
+                    else if (AVC_HeaderWritten && tagVideo.CodecID == FLVTagVideo.Codec.AVC && tagVideo.AvcPacketType == FLVTagVideo.AVCPacket.SEQUENCE_HEADER)
                         return;
 
                     SizeVideo += tag.DataSize;

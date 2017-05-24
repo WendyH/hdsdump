@@ -116,18 +116,16 @@ namespace hdsdump.flv {
                         if (tag.DataSize > 2 && (tag.Type == TagType.AUDIO || tag.Type == TagType.AKAMAI_ENC_AUDIO || tag.Type == TagType.VIDEO || tag.Type == TagType.AKAMAI_ENC_VIDEO)) {
                             if (!tagsStore.hasAudio && (tag.Type == TagType.AUDIO || tag.Type == TagType.AKAMAI_ENC_AUDIO)) {
                                 tagsStore.hasAudio = true;
-                                var audioTag = tag as FLVTagAudio;
-                                if (audioTag != null) {
-                                    tagsStore.AudioFormat = audioTag.soundFormat;
-                                    tagsStore.AudioRate = audioTag.soundRate;
-                                    tagsStore.AudioChannels = audioTag.soundChannels;
+                                if (tag is FLVTagAudio audioTag) {
+                                    tagsStore.AudioFormat   = audioTag.SoundFormat;
+                                    tagsStore.AudioRate     = audioTag.SoundRate;
+                                    tagsStore.AudioChannels = audioTag.SoundChannels;
                                 }
                             }
                             if (!tagsStore.hasVideo && (tag.Type == TagType.VIDEO || tag.Type == TagType.AKAMAI_ENC_VIDEO)) {
                                 tagsStore.hasVideo = true;
-                                var videoTag = tag as FLVTagVideo;
-                                if (videoTag != null) {
-                                    tagsStore.VideoCodec = videoTag.codecID;
+                                if (tag is FLVTagVideo videoTag) {
+                                    tagsStore.VideoCodec = videoTag.CodecID;
                                 }
                             }
 

@@ -7,32 +7,32 @@ namespace hdsdump.flv {
         public FLVTagVideo(TagType type = TagType.VIDEO): base(type) {
 		}
 		
-		public FrameType frameType {
-            get { return (FrameType)((Data[0] >> 4) & 0x0f); }
+		public Frame FrameType {
+            get { return (Frame)((Data[0] >> 4) & 0x0f); }
             set {
                 Data[0] &= 0x0f;   // clear top 4 bits
                 Data[0] |= (byte)(((int)value & 0x0f) << 4);
             }
         }
 		
-		public CodecID codecID {
-            get { return (CodecID)(Data[0] & 0x0f); }
+		public Codec CodecID {
+            get { return (Codec)(Data[0] & 0x0f); }
 			set {
                 Data[0] &= 0xf0;    // clear bottom 4 bits
                 Data[0] |= (byte)((int)value & 0x0f);
             }
         }
 		
-		public int infoPacketValue {
+		public int InfoPacketValue {
             get { return Data[1]; }
             set { Data[1] = (byte)value; }
         }
 
-		public AVCPacketType avcPacketType {
-            get { return (AVCPacketType)((codecID != CodecID.AVC) ? 0 : Data[1]); }
+		public AVCPacket AvcPacketType {
+            get { return (AVCPacket)((CodecID != Codec.AVC) ? 0 : Data[1]); }
             set {
                 Data[1] = (byte)value;
-                if (avcPacketType != AVCPacketType.NALU) {
+                if (AvcPacketType != AVCPacket.NALU) {
                     // zero the composition time offset
                     Data[2] = 0;
                     Data[3] = 0;
@@ -41,10 +41,10 @@ namespace hdsdump.flv {
             }
         }
 		
-		public uint avcCompositionTimeOffset {
+		public uint AVCCompositionTimeOffset {
             get {
                 // throw error if frameType == FRAME_TYPE_INFO?
-                if ((codecID != CodecID.AVC) || (avcPacketType != AVCPacketType.NALU)) return 0;
+                if ((CodecID != Codec.AVC) || (AvcPacketType != AVCPacket.NALU)) return 0;
 
                 uint value = (uint)((Data[2] << 16) | (Data[3] << 8) | Data[4]);
                 if ((value & 0x00800000) > 0) {
@@ -54,7 +54,7 @@ namespace hdsdump.flv {
             }
             set {
                 // throw error if frameType == FRAME_TYPE_INFO?
-                if ((codecID != CodecID.AVC) || (avcPacketType != AVCPacketType.NALU)) {
+                if ((CodecID != Codec.AVC) || (AvcPacketType != AVCPacket.NALU)) {
                     throw new InvalidOperationException("set avcCompositionTimeOffset() not permitted unless codecID is CODEC_ID_AVC and avcPacketType is AVC NALU");
                 }
                 Data[2] = (byte)((value >> 16) & 0xff);
@@ -63,7 +63,7 @@ namespace hdsdump.flv {
             }
         }
 		
-        public enum FrameType: int {
+        public enum Frame: int {
             UNKNOWN            = 0,
 		    KEYFRAME           = 1,
 		    INTER              = 2,
@@ -72,7 +72,7 @@ namespace hdsdump.flv {
 		    INFO               = 5
         }
 
-        public enum CodecID : int {
+        public enum Codec : int {
             UNKNOWN   = 0,
             JPEG      = 1,
 		    SORENSON  = 2,
@@ -82,18 +82,18 @@ namespace hdsdump.flv {
 		    SCREEN_V2 = 6,
 		    AVC       = 7
         }
-        public enum AVCPacketType : int { SEQUENCE_HEADER = 0, NALU = 1, END_OF_SEQUENCE = 2 }
+        public enum AVCPacket     : int { SEQUENCE_HEADER = 0, NALU = 1, END_OF_SEQUENCE = 2 }
         public enum InfoPacketSeek: int { START = 0, END = 1 }
 
-        public static string CodecToString(CodecID id) {
+        public static string CodecToString(Codec id) {
             switch (id) {
-                case CodecID.JPEG     : return "MJPEG";
-                case CodecID.SORENSON : return "Sorenson H.263";
-                case CodecID.SCREEN   : return "Screen video";
-                case CodecID.VP6      : return "On2 VP6";
-                case CodecID.VP6_ALPHA: return "On2 VP6 with alpha channel";
-                case CodecID.SCREEN_V2: return "Screen video version 2";
-                case CodecID.AVC      : return "AVC";
+                case Codec.JPEG     : return "MJPEG";
+                case Codec.SORENSON : return "Sorenson H.263";
+                case Codec.SCREEN   : return "Screen video";
+                case Codec.VP6      : return "On2 VP6";
+                case Codec.VP6_ALPHA: return "On2 VP6 with alpha channel";
+                case Codec.SCREEN_V2: return "Screen video version 2";
+                case Codec.AVC      : return "AVC";
             }
             return "Unknown";
         }
