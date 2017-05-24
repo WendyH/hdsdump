@@ -87,7 +87,17 @@ namespace hdsdump {
             try {
                 AppDomain.CurrentDomain.UnhandledException += (sender, e) => FatalExceptionObject(e.ExceptionObject);
 
+                try {
+                    isRedirected = Console.CursorVisible && false;
+                } catch {
+                    isRedirected = true;
+                }
+                if (isRedirected) {
+                    Console.SetOut(new StreamWriter(Console.OpenStandardError()) { AutoFlush = true });
+                }
+
                 Check4Redirect2Process(ref args);
+
                 CLI cli = new CLI(args);
                 if (cli.ChkParam("waitkey"  )) waitkey = true;
                 if (cli.ChkParam("nowaitkey")) waitkey = false;
@@ -396,7 +406,8 @@ namespace hdsdump {
         private static object interfaceLocker = new object();
 
         public static void Message(string msg) {
-            if (quiet || !ConsolePresent) return;
+            if (quiet || (!ConsolePresent && !isRedirected))
+                return;
             lock (interfaceLocker) {
                 Console.ForegroundColor = ConsoleColor.Gray;
                 List<ConsoleColor> colorsStack = new List<ConsoleColor>();
@@ -476,17 +487,6 @@ namespace hdsdump {
         }
 
         static bool Check4Redirect2Process(ref string[] args) {
-            try {
-                isRedirected = Console.CursorVisible && false;
-            } catch {
-                isRedirected = true;
-            }
-            if (isRedirected) {
-                var streamErr = new StreamWriter(Console.OpenStandardError());
-                streamErr.AutoFlush = true;
-                Console.SetOut(streamErr);
-            }
-
             string par2proc = "";
             string pName    = "";
             bool   isredir  = false;
@@ -515,8 +515,6 @@ namespace hdsdump {
                 redir2Prog.StartInfo.RedirectStandardInput  = true;
                 redir2Prog.StartInfo.RedirectStandardOutput = false;
                 redir2Prog.Start();
-            } else {
-
             }
             return isredir;
         }

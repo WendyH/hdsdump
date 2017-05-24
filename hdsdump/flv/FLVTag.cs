@@ -114,10 +114,22 @@ namespace hdsdump.flv {
                     while (tag != null) {
                         // only audio or video and skipping small sized packet
                         if (tag.DataSize > 2 && (tag.Type == TagType.AUDIO || tag.Type == TagType.AKAMAI_ENC_AUDIO || tag.Type == TagType.VIDEO || tag.Type == TagType.AKAMAI_ENC_VIDEO)) {
-                            if (!tagsStore.hasAudio && (tag.Type == TagType.AUDIO || tag.Type == TagType.AKAMAI_ENC_AUDIO))
+                            if (!tagsStore.hasAudio && (tag.Type == TagType.AUDIO || tag.Type == TagType.AKAMAI_ENC_AUDIO)) {
                                 tagsStore.hasAudio = true;
-                            if (!tagsStore.hasVideo && (tag.Type == TagType.VIDEO || tag.Type == TagType.AKAMAI_ENC_VIDEO))
+                                var audioTag = tag as FLVTagAudio;
+                                if (audioTag != null) {
+                                    tagsStore.AudioFormat = audioTag.soundFormat;
+                                    tagsStore.AudioRate = audioTag.soundRate;
+                                    tagsStore.AudioChannels = audioTag.soundChannels;
+                                }
+                            }
+                            if (!tagsStore.hasVideo && (tag.Type == TagType.VIDEO || tag.Type == TagType.AKAMAI_ENC_VIDEO)) {
                                 tagsStore.hasVideo = true;
+                                var videoTag = tag as FLVTagVideo;
+                                if (videoTag != null) {
+                                    tagsStore.VideoCodec = videoTag.codecID;
+                                }
+                            }
 
                             tagsStore.Enqueue(tag);
 

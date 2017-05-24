@@ -8,8 +8,6 @@ namespace hdsdump {
     public delegate void WorkerDoneDelegate(Media media);
 
     public class HDSWorker {
-        private static bool encryptionInformed = false;
-
         WorkerDoneDelegate Done;
         public Media       media;
         public uint        fragIndex;
@@ -58,12 +56,8 @@ namespace hdsdump {
             if (boxes.Find(i => i.Type == F4FConstants.BOX_TYPE_MDAT) is MediaDataBox mdat) {
                 lock (tagsStore) {
                     FLVTag.GetVideoAndAudioTags(tagsStore, mdat.data);
-                    tagsStore.ARFA = boxes.Find(i => i.Type == F4FConstants.BOX_TYPE_AFRA) as AdobeFragmentRandomAccessBox;
+                    tagsStore.ARFA     = boxes.Find(i => i.Type == F4FConstants.BOX_TYPE_AFRA) as AdobeFragmentRandomAccessBox;
                     tagsStore.Complete = true;
-                    if (!encryptionInformed && tagsStore.isAkamaiEncrypted) {
-                        Program.Message("<c:Yellow>Encryption: Akamai DRM");
-                        encryptionInformed = true;
-                    }
                 }
                 HDSDownloader.LiveIsStalled = false;
 

@@ -1043,11 +1043,9 @@ namespace hdsdump {
                 }
                 this.currentFilesize += datalen;
             } catch (Exception e) {
-                if (Program.ConsolePresent) {
-                    Program.DebugLog("Error while writing to file! Message: " + e.Message);
-                    Program.DebugLog("Exception: " + e.ToString());
-                    Program.Quit("<c:Red>Error while writing to file! <c:DarkCyan>Message: <c:Magenta>" + e.Message);
-                }
+                Program.DebugLog("Error while writing to file! Message: " + e.Message);
+                Program.DebugLog("Exception: " + e.ToString());
+                Program.Quit("<c:Red>Error while writing to file! <c:DarkCyan>Message: <c:Magenta>" + e.Message);
             }
         }
 

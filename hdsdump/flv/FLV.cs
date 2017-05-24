@@ -72,8 +72,22 @@ namespace hdsdump.flv {
 
         private void WriteData(byte[] data, FileMode fileMode = FileMode.Append) {
             try {
-                if (Program.redir2Prog != null) {
+                if (usePipe) {
+                    // write to named pipe
+                    if (Writer == null) {
+                        if (Stream     != null) Stream.Close();
+                        if (pipeHandle != null) pipeHandle.Close();
+                        pipeHandle = NativeMethods.CreateFile(outFile, NativeMethods.GENERIC_WRITE, 0, IntPtr.Zero, NativeMethods.OPEN_EXISTING, NativeMethods.FILE_FLAG_OVERLAPPED, IntPtr.Zero);
+                        if (pipeHandle.IsInvalid)
+                            throw new InvalidOperationException("Can not open an existing pipe for writting.");
+                        Stream = new FileStream(pipeHandle, FileAccess.Write, 4096, true);
+                        Writer = new BinaryWriter(Stream);
+                    }
+                    Writer.Write(data, 0, data.Length);
+                    Writer.Flush();
 
+                } else if (Program.redir2Prog != null) {
+                    // write to standart input of redirected process
                     if (Program.redir2Prog.HasExited)
                         throw new InvalidOperationException("Redirected process was exited");
 
@@ -82,26 +96,18 @@ namespace hdsdump.flv {
                     stream.Flush();
 
                 } else if (play || Program.isRedirected) {
+                    // write to standart output
                     Stream stdout = Console.OpenStandardOutput();
                     stdout.Write(data, 0, data.Length);
                     stdout.Flush();
 
                 } else {
+                    // write in file
                     if (Writer == null) {
-                        if (usePipe) {
-                            if (Stream != null) Stream.Close();
-                            if (pipeHandle != null) pipeHandle.Close();
-                            pipeHandle = NativeMethods.CreateFile(outFile, NativeMethods.GENERIC_WRITE, 0, IntPtr.Zero, NativeMethods.OPEN_EXISTING, NativeMethods.FILE_FLAG_OVERLAPPED, IntPtr.Zero);
-                            if (pipeHandle.IsInvalid)
-                                throw new InvalidOperationException("Cannot create pipe for writting.");
-                            Stream = new FileStream(pipeHandle, FileAccess.Write, 4096, true);
-                            Writer = new BinaryWriter(Stream);
-                        } else {
-                            if (Stream != null) this.Stream.Close();
-                            if (pipeHandle != null) pipeHandle.Close();
-                            Stream = new FileStream(outFile, fileMode);
-                            Writer = new BinaryWriter(Stream);
-                        }
+                        if (Stream     != null) Stream.Close();
+                        if (pipeHandle != null) pipeHandle.Close();
+                        Stream = new FileStream(outFile, fileMode);
+                        Writer = new BinaryWriter(Stream);
                     }
                     Writer.Write(data, 0, data.Length);
                     Writer.Flush();
@@ -151,7 +157,8 @@ namespace hdsdump.flv {
         }
 
         public void FixFileMetadata() {
-            if (play || Program.redir2Prog != null || Program.isRedirected || !File.Exists(outFile)) return;
+            if (play || Program.redir2Prog != null || Program.isRedirected || !File.Exists(outFile))
+                return;
             if (Writer != null) {
                 Writer.Flush();
                 Writer.Close();

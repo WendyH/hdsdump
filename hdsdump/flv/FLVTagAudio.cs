@@ -92,19 +92,16 @@ namespace hdsdump.flv {
         }
 
         public enum SoundFormat : int {
-            LINEAR = 0,
-            ADPCM = 1,
-            MP3 = 2,
-            LINEAR_LE = 3,
-            NELLYMOSER_16K = 4,
-            NELLYMOSER_8K = 5,
-            NELLYMOSER = 6,
-            G711A = 7,
-            G711U = 8,
-            AAC = 10,
-            SPEEX = 11,
-            MP3_8K = 14,
-            DEVICE_SPECIFIC = 15
+            LINEAR_PCM      = 0,  // Linear PCM, platform endian
+            ADPCM           = 1,  // ADPCM
+            MP3             = 2,  // MP3            LINEAR_PCM_LE   = 3,  // Linear PCM, little endian
+            NELLYMOSER_16K  = 4,  // Nellymoser 16 kHz mono
+            NELLYMOSER_8K   = 5,  // Nellymoser 8 kHz mono
+            NELLYMOSER      = 6,  // Nellymoser            G711A           = 7,  // G.711 A-law logarithmic PCM
+            G711U           = 8,  // G.711 mu-law logarithmic PCM
+            UNKNOWN_FORMAT  = 9,  // reserved
+            AAC             = 10, // AAC            SPEEX           = 11, // Speex            MP3_8K          = 14, // MP3 8 kHz
+            DEVICE_SPECIFIC = 15  // Device-specific sound
         }
 
         public enum SoundRate : int {
@@ -123,5 +120,34 @@ namespace hdsdump.flv {
             MONO   = 1,
             STEREO = 2
         }
-	}
+
+        public static string RateToString(SoundRate soundRate) {
+            switch (soundRate) {
+                case SoundRate._5K : return "5.5 kHz";
+                case SoundRate._11K: return "11 kHz";
+                case SoundRate._22K: return "22 kHz";
+                case SoundRate._44K: return "44 kHz";
+            }
+            return "Unknown";
+        }
+
+        public static string FormatToString(SoundFormat soundFormat) {
+            switch (soundFormat) {
+                case SoundFormat.LINEAR_PCM     : return "Linear PCM, platform endian";
+                case SoundFormat.ADPCM          : return "ADPCM";
+                case SoundFormat.MP3            : return "MP3";
+                case SoundFormat.LINEAR_PCM_LE  : return "Linear PCM, little endian";
+                case SoundFormat.NELLYMOSER_16K : return "Nellymoser 16 kHz mono";
+                case SoundFormat.NELLYMOSER_8K  : return "Nellymoser 8 kHz mono";
+                case SoundFormat.NELLYMOSER     : return "Nellymoser";
+                case SoundFormat.G711A          : return "G.711 A-law logarithmic PCM";
+                case SoundFormat.G711U          : return "G.711 mu-law logarithmic PCM";
+                case SoundFormat.AAC            : return "AAC";
+                case SoundFormat.SPEEX          : return "Speex";
+                case SoundFormat.MP3_8K         : return "MP3 8 kHz";
+                case SoundFormat.DEVICE_SPECIFIC: return "Device-specific sound";
+            }
+            return "Unknown";
+        }
+    }
 }

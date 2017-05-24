@@ -64,6 +64,7 @@ namespace hdsdump.flv {
         }
 		
         public enum FrameType: int {
+            UNKNOWN            = 0,
 		    KEYFRAME           = 1,
 		    INTER              = 2,
 		    DISPOSABLE_INTER   = 3,
@@ -72,6 +73,7 @@ namespace hdsdump.flv {
         }
 
         public enum CodecID : int {
+            UNKNOWN   = 0,
             JPEG      = 1,
 		    SORENSON  = 2,
 		    SCREEN    = 3,
@@ -82,5 +84,19 @@ namespace hdsdump.flv {
         }
         public enum AVCPacketType : int { SEQUENCE_HEADER = 0, NALU = 1, END_OF_SEQUENCE = 2 }
         public enum InfoPacketSeek: int { START = 0, END = 1 }
-	}
+
+        public static string CodecToString(CodecID id) {
+            switch (id) {
+                case CodecID.JPEG     : return "MJPEG";
+                case CodecID.SORENSON : return "Sorenson H.263";
+                case CodecID.SCREEN   : return "Screen video";
+                case CodecID.VP6      : return "On2 VP6";
+                case CodecID.VP6_ALPHA: return "On2 VP6 with alpha channel";
+                case CodecID.SCREEN_V2: return "Screen video version 2";
+                case CodecID.AVC      : return "AVC";
+            }
+            return "Unknown";
+        }
+
+    }
 }

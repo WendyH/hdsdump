@@ -54,7 +54,7 @@ namespace hdsdump {
         public Dictionary<string, string> Params = new Dictionary<string, string> { };
 
         private void Error(string msg) {
-            if (Program.isRedirected || Program.redir2Prog != null)
+            if (Program.redir2Prog != null)
                 Program.Message(msg);
             else
                 Program.Quit(msg);
