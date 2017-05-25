@@ -10,7 +10,7 @@ using System.Threading;
 using System.Xml;
 
 namespace hdsdump {
-    public sealed class F4F: IDisposable {
+    public sealed class F4FOldMethod: IDisposable {
         public bool usePipe = false;
         public FileStream   pipeStream = null;
         public BinaryWriter pipeWriter = null;
@@ -108,7 +108,7 @@ namespace hdsdump {
         }
 
         // constructor
-        public F4F() {
+        public F4FOldMethod() {
             this.InitDecoder();
         }
 
@@ -132,7 +132,7 @@ namespace hdsdump {
             }
         }
 
-        ~F4F() {
+        ~F4FOldMethod() {
             Dispose(false);
         }
 

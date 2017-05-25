@@ -4,9 +4,9 @@ using System.IO;
 
 namespace hdsdump.flv {
     public class FLV: IDisposable {
-        public string outFile    = "hdsdump.flv";
-        public bool   play       = false;
-        public bool   usePipe    = false;
+        public string outFile = "hdsdump.flv";
+        public bool   play    = false;
+        public bool   usePipe = false;
         public uint   Filesize      = 0;
         public uint   LastTimestamp = 0;
         public uint   SizeAudio     = 0;
@@ -106,7 +106,7 @@ namespace hdsdump.flv {
                     if (Writer == null) {
                         if (Stream     != null) Stream.Close();
                         if (pipeHandle != null) pipeHandle.Close();
-                        Stream = new FileStream(outFile, fileMode);
+                        Stream = new FileStream(Program.outDir + outFile, fileMode);
                         Writer = new BinaryWriter(Stream);
                     }
                     Writer.Write(data, 0, data.Length);
@@ -157,14 +157,15 @@ namespace hdsdump.flv {
         }
 
         public void FixFileMetadata() {
-            if (play || Program.redir2Prog != null || Program.isRedirected || !File.Exists(outFile))
+            string sFile = Program.outDir + outFile;
+            if (play || Program.redir2Prog != null || Program.isRedirected || !File.Exists(sFile))
                 return;
             if (Writer != null) {
                 Writer.Flush();
                 Writer.Close();
                 Writer = null;
             }
-            using (var fs = new FileStream(outFile, FileMode.Open, FileAccess.ReadWrite)) {
+            using (var fs = new FileStream(sFile, FileMode.Open, FileAccess.ReadWrite)) {
                 if (fs.Length < 20) return;
                 fs.Seek(13, SeekOrigin.Begin);
                 int b = fs.ReadByte();
@@ -179,6 +180,39 @@ namespace hdsdump.flv {
                     if (newData.Length <= dataSize) {
                         fs.Position = posData;
                         fs.Write(newData, 0, newData.Length);
+                    }
+                }
+            }
+        }
+
+        public void GetLastTimestampFromExistingFile() {
+            LastTimestamp = 0;
+            string sFile = Program.outDir + outFile;
+            if (play || Program.redir2Prog != null || usePipe || !File.Exists(sFile))
+                return;
+            int b1, b2, b3, b4;
+            using (FileStream fs = new FileStream(sFile, FileMode.Open)) {
+                if (fs.Length > 600) {
+                    fs.Position = fs.Length - 4;
+                    b1 = fs.ReadByte();
+                    b2 = fs.ReadByte();
+                    b3 = fs.ReadByte();
+                    b4 = fs.ReadByte();
+                    int blockLength = b2 * 256 * 256 + b3 * 256 + b4;
+                    if (fs.Length - blockLength > 600) {
+                        fs.Position = fs.Length - blockLength;
+                        b1 = fs.ReadByte();
+                        b2 = fs.ReadByte();
+                        b3 = fs.ReadByte();
+                        LastTimestamp = (uint)(b1 * 256 * 256 + b2 * 256 + b3);
+                        FLVHeaderWritten = true;
+                        Filesize = (uint)fs.Length;
+                        //this.FLVContinue = true;
+                        Program.Message("<c:DarkYellow>Continue downloading with exiting file from timestamp: " + HDSDumper.FormatTS(LastTimestamp, true));
+                        if (DecoderState == null) {
+                            DecoderState = new DecoderLastState();
+                        }
+                        DecoderState.baseTS = 0;
                     }
                 }
             }

@@ -171,26 +171,25 @@ namespace hdsdump {
             if (!isDetermined) {
                 if (FragmentsData.ContainsKey(media) && FragmentsData[media].Count > 0) {
                     var tagStore = FragmentsData[media].Peek();
-                    lock (tagStore) {
-                        if (tagStore.Complete) {
-                            hasVideo = tagStore.hasVideo;
-                            hasAudio = tagStore.hasAudio;
-                            isDetermined = true;
-                            string videoInfo, audioInfo;
-                            videoInfo = hasVideo ? "<c:DarkGreen>" + FLVTagVideo.CodecToString(tagStore.VideoCodec) : "<c:DarkRed>None";
-                            if (hasAudio) {
-                                audioInfo =
-                                    "<c:DarkGreen>" + FLVTagAudio.FormatToString(tagStore.AudioFormat) +
-                                    " " + FLVTagAudio.RateToString(tagStore.AudioRate) +
-                                    " " + (tagStore.AudioChannels == FLVTagAudio.Channels.MONO ? "Mono" : "Stereo");
-                            } else {
-                                audioInfo = "<c:DarkRed>None";
-                            }
-                            Program.Message(string.Format("<c:DarkCyan>{0}: {1}", "Video", videoInfo));
-                            Program.Message(string.Format("<c:DarkCyan>{0}: {1}", "Audio", audioInfo));
-                            if (tagStore.isAkamaiEncrypted) {
-                                Program.Message("<c:Yellow>Encryption: Akamai DRM");
-                            }
+                    if (tagStore.Complete) {
+                        Program.ClearLine();
+                        hasVideo = tagStore.hasVideo;
+                        hasAudio = tagStore.hasAudio;
+                        isDetermined = true;
+                        string videoInfo, audioInfo;
+                        videoInfo = hasVideo ? "<c:DarkGreen>" + FLVTagVideo.CodecToString(tagStore.VideoCodec) : "<c:DarkRed>None";
+                        if (hasAudio) {
+                            audioInfo =
+                                "<c:DarkGreen>" + FLVTagAudio.FormatToString(tagStore.AudioFormat) +
+                                " " + FLVTagAudio.RateToString(tagStore.AudioRate) +
+                                " " + (tagStore.AudioChannels == FLVTagAudio.Channels.MONO ? "Mono" : "Stereo");
+                        } else {
+                            audioInfo = "<c:DarkRed>None";
+                        }
+                        Program.Message(string.Format("<c:DarkCyan>{0}: {1}", "Video", videoInfo));
+                        Program.Message(string.Format("<c:DarkCyan>{0}: {1}", "Audio", audioInfo));
+                        if (tagStore.isAkamaiEncrypted) {
+                            Program.Message("<c:Yellow>Encryption: Akamai DRM");
                         }
                     }
                 }

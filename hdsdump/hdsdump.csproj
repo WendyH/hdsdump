@@ -118,7 +118,7 @@
     <Compile Include="HDSBinaryReader.cs" />
     <Compile Include="CLI.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="F4F.cs" />
+    <Compile Include="F4FOldMethod.cs" />
     <Compile Include="HDSBinaryWriter.cs" />
     <Compile Include="HDSDownloader.cs" />
     <Compile Include="HDSWorker.cs" />

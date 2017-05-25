@@ -170,7 +170,7 @@ namespace hdsdump {
 
                 bool usePipe = outFile.IndexOf(@"\\.\pipe\") == 0;
                 cli.Params["threads"] = threads.ToString();
-                cli.Params["outfile"] = redir2Prog != null ? redir2Prog.ProcessName : (isRedirected ? "<redirected>" : outFile);
+                cli.Params["outfile"] = redir2Prog != null ? redir2Prog.ProcessName : (isRedirected && !usePipe ? "<redirected>" : outFile);
                 cli.EchoSetsParameters();
 
                 if (!cli.ChkParam("oldmethod")) {
@@ -191,6 +191,11 @@ namespace hdsdump {
                     HdsDumper.testalt  = testalt;
                     HdsDumper.fromTimestamp = fromTimestamp;
                     HdsDumper.sessionKey = sessionKey;
+
+                    if (fcontinue) {
+                        HdsDumper.FLVFile.GetLastTimestampFromExistingFile();
+                        HdsDumper.fromTimestamp = HdsDumper.FLVFile.LastTimestamp;
+                    }
 
                     if (ConsolePresent) {
                         Console.CancelKeyPress += delegate {
@@ -216,18 +221,18 @@ namespace hdsdump {
                 }
 
                 // ========== OLD METHOD ==========
-                F4F f4f = new F4F();
+                F4FOldMethod f4f = new F4FOldMethod();
                 // Disable metadata if it invalidates the stream duration
                 if ((f4f.fromTimestamp > 0) || (start > 0) || (duration > 0) || (filesize > 0))
                     f4f.metadata = false;
 
-                f4f.usePipe = usePipe;
                 f4f.fromTimestamp = fromTimestamp;
-                f4f.play       = play;
-                //f4f.threads    = threads;
-                f4f.duration   = (int)duration;
-                f4f.filesize   = (int)filesize;
-                f4f.start      = (int)start;
+                f4f.usePipe  = usePipe;
+                f4f.play     = play;
+                f4f.threads  = threads;
+                f4f.duration = (int)duration;
+                f4f.filesize = (int)filesize;
+                f4f.start    = (int)start;
                 f4f.ad.sessionKey = sessionKey;
                 f4f.auth     = auth;
                 f4f.baseUrl  = baseUrl;
@@ -397,10 +402,15 @@ namespace hdsdump {
         }
 
         public static void ShowHeader(string header) {
-            if (quiet || !ConsolePresent) return;
-            string h  = Regex.Replace(header, @"(<c:\w+>|</c>)", "");
-            int width = (Console.WindowWidth / 2 + h.Length / 2);
-            Message(String.Format("\n{0," + width.ToString() + "}\n", header));
+            if (quiet || (!ConsolePresent && !isRedirected))
+                return;
+            if (!ConsolePresent ) {
+                Message(header);
+            } else {
+                string h = Regex.Replace(header, @"(<c:\w+>|</c>)", "");
+                int width = (Console.WindowWidth / 2 + h.Length / 2);
+                Message(String.Format("\n{0," + width.ToString() + "}\n", header));
+            }
         }
 
         private static object interfaceLocker = new object();
@@ -437,6 +447,13 @@ namespace hdsdump {
                 if (!msg.EndsWith("\r")) Console.Write("\n\r");
                 Console.ResetColor();
             }
+        }
+
+        public static void ClearLine() {
+            int lineWidth = 30;
+            if (ConsolePresent)
+                lineWidth = Console.WindowWidth - 1;
+            Message("".PadRight(lineWidth, ' ') + "\r");
         }
 
         static ReaderWriterLock debugFileLocker = new ReaderWriterLock();

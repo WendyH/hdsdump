@@ -80,13 +80,14 @@ namespace hdsdump {
 
         public void StartDownload(string manifestUrl) {
             GetManifestAndSelectMedia(manifestUrl);
+            Program.Message("Waiting first fragment...\r");
             // downloader already running in UpdateBootstrapInfo()
             DetermineAudioVideoPresentInDownloadedFragment();
             var DecoderState = new DecoderLastState();
             bool useAltAudio = selectedMediaAlt != null;
             TagsFilter tagFilter = TagsFilter.ALL;
 
-            if (UpdateStatusTimer == null) {
+            if (UpdateStatusTimer == null && !Program.isRedirected) {
                 UpdateStatusTimer = new Timer(ShowDownloadStatus, null, 0, UpdateStatusInterval);
             }
 
@@ -102,6 +103,9 @@ namespace hdsdump {
             FLVTag mediaTag     = null;
             FLVTag alternateTag = null;
             bool needSynchronizationAudio = true;
+            if (!Program.ConsolePresent && Program.isRedirected) {
+                Program.Message("Processing...");
+            }
             // --------------- MAIN LOOP DECODE FRAGMENTS ----------------
             while (Downloader.TagsAvaliable(selectedMedia) || selectedMedia.Bootstrap.live) {
                 if (mediaTag == null) {
@@ -236,7 +240,7 @@ namespace hdsdump {
 			return true;
 		}
 
-        private string FormatTS(uint ts, bool withMS = false) {
+        public static string FormatTS(uint ts, bool withMS = false) {
             TimeSpan time = TimeSpan.FromMilliseconds(ts);
             if (withMS)
                 return string.Format("{0:00}:{1:00}:{2:00}.{3:00}", time.Hours, time.Minutes, time.Seconds, time.Milliseconds);

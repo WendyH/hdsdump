@@ -81,10 +81,10 @@ namespace hdsdump {
         public void KDF() {
             // Decrypt packet salt
             if (ecmID != prevEcmID) {
-                byte[] saltHmacKey = sha1.ComputeHash(F4F.AppendBuf(sessionKey, packetIV));
+                byte[] saltHmacKey = sha1.ComputeHash(F4FOldMethod.AppendBuf(sessionKey, packetIV));
                 if (debug) Program.DebugLog("SaltHmacKey  : " + Hexlify(saltHmacKey));
                 shaSalt.Key = saltHmacKey;
-                saltAesKey  = F4F.BlockCopy(shaSalt.ComputeHash(hmacData1), 0, 16);
+                saltAesKey  = F4FOldMethod.BlockCopy(shaSalt.ComputeHash(hmacData1), 0, 16);
                 if (debug) Program.DebugLog("SaltAesKey   : " + Hexlify(saltAesKey));
                 prevEcmID = ecmID;
             }
@@ -95,15 +95,15 @@ namespace hdsdump {
                 Program.Quit("<c:Red>Error ocurred while decription salt of fagment.");
             }
             if (debug) Program.DebugLog("DecryptedSalt: " + Hexlify(decryptedSalt));
-            decryptBytes = F4F.ReadInt32(ref decryptedSalt, 0);
+            decryptBytes = F4FOldMethod.ReadInt32(ref decryptedSalt, 0);
             if (debug) Program.DebugLog("DecryptBytes : " + decryptBytes);
-            byte[] decryptedSalt2 = F4F.BlockCopy(decryptedSalt, 4, 16);
+            byte[] decryptedSalt2 = F4FOldMethod.BlockCopy(decryptedSalt, 4, 16);
             if (debug) Program.DebugLog("DecryptedSalt: " + Hexlify(decryptedSalt2));
             // Generate final packet decryption key
             byte[] finalHmacKey = sha1.ComputeHash(decryptedSalt2);
             if (debug) Program.DebugLog("FinalHmacKey : " + Hexlify(finalHmacKey));
             finalsha.Key = finalHmacKey;
-            packetKey = F4F.BlockCopy(finalsha.ComputeHash(hmacData2), 0, 16);
+            packetKey = F4FOldMethod.BlockCopy(finalsha.ComputeHash(hmacData2), 0, 16);
             if (debug) Program.DebugLog("PacketKey    : " + Hexlify(packetKey));
         }
 
@@ -193,7 +193,7 @@ namespace hdsdump {
                     lastBlockData = br.ReadToEnd();
                     if (decryptBytes > 0)
                         decryptedData = AesDecrypt(encryptedData, packetKey, packetIV);
-                    decryptedData = F4F.AppendBuf(decryptedData, lastBlockData);
+                    decryptedData = F4FOldMethod.AppendBuf(decryptedData, lastBlockData);
                     if (debug) {
                         Program.DebugLog("EncryptedData: " + Hexlify(encryptedData, 64));
                         Program.DebugLog("DecryptedData: " + Hexlify(decryptedData, 64));
