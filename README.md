@@ -16,7 +16,8 @@ Features
 * Flash® Media Manifest (F4M) format version 3.0 support
 * Selection alternate audio (if exists) by language, codec, bitrate or label
 * Akamai DRM decryption (from AdobeHDS.php by K-S-V)
-* Piping stream into other allpications
+* Piping stream into other allpications or processes
+* Not breaking if live stream is interrupted
 
 Usage
 -----
@@ -46,7 +47,7 @@ Piping to VLC player:
 
 (Windows)
 ```
-hdsdump.exe -m http://dr01-lh.akamaihd.net/z/dr01_0@147054/manifest.f4m?hdcore=3.1.0 -H "X-Forwarded-For:2.104.1.207" -p | "%ProgramFiles(x86)%\VideoLAN\VLC\vlc.exe" --file-caching=10000 -
+hdsdump.exe -m http://dr01-lh.akamaihd.net/z/dr01_0@147054/manifest.f4m?hdcore=3.1.0 -H "X-Forwarded-For:2.104.1.207" | "%ProgramFiles(x86)%\VideoLAN\VLC\vlc.exe" --file-caching=10000 -
 ```
 
 (Linux, Mac with mono runtime)
@@ -54,9 +55,24 @@ hdsdump.exe -m http://dr01-lh.akamaihd.net/z/dr01_0@147054/manifest.f4m?hdcore=3
 mono hdsdump.exe -m http://zouglahd-f.akamaihd.net/z/zougla_1@56341/manifest.f4m -p | vlc.exe -
 ```
 
+Sets additional HTTP headers:
+```
+hdsdump.exe -m <manifest_url> -H "X-Forwarded-For:1.2.3.4" -H "Authorization: Bearer mF_9.B5f-4.1JqM" --useragent "iPhone 6 CDMA"
+```
+
+Select audio by language if alt media is present in manifest:
+```
+hdsdump.exe -m <manifest_url> --lang eng,es
+```
+
+or select audio by label if alt media is present:
+```
+hdsdump.exe -m <manifest_url> --alt spanish
+```
+
 Encoding with ffmpeg:
 ```
-hdsdump.exe -m <manifest_url> -p | ffmpeg.exe -y -i - out.mpg
+hdsdump.exe -m <manifest_url> | ffmpeg.exe -y -i - out.mpg
 ```
 
 Switches
@@ -77,9 +93,9 @@ You can use hdsdump with following switches:
  -fp|--fproxy            force proxy for downloading of fragments
      --postdata          data for the POST method for http request
  -wk|--waitkey           wait pressed any key at the end
- -sl|--showmlink         display manifest link at the start (deprecated)
  -c |--continue          continue if possible downloading with exists file
  -z |--oldmethod         use the old method to download
+     --quiet             no output any messages
  -v |--verbose           show exteneded info while dumping
      --testalt           sets all avaliable media also as alternate
  -a |--auth      <param> authentication string for fragment requests (add '?' with parameter to end manifest url)
