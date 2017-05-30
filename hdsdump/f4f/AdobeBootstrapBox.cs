@@ -165,16 +165,20 @@ namespace hdsdump.f4f {
         public uint GetSegmentFromFragment(uint fragN) {
             if (segmentRunTables.Count == 0) return 1;
 
-            SegmentFragmentPair firstSegment = GetFirstSegment();
-            if (firstSegment == null) return 1;
+            if (!live) {
+                SegmentFragmentPair firstSegment = GetFirstSegment();
 
-            uint segNum  = firstSegment.firstSegment;
-            foreach (var tab in segmentRunTables) {
-                foreach (var s in tab.segmentFragmentPairs) {
-                    if ((segNum >= s.firstSegment) && (segNum < (s.fragmentsAccrued + s.fragmentsPerSegment))) {
-                        return segNum;
+                if (firstSegment == null) return 1;
+
+                uint segNum = firstSegment.firstSegment;
+                foreach (var tab in segmentRunTables) {
+                    foreach (var s in tab.segmentFragmentPairs) {
+                        if ((segNum >= s.firstSegment) && (fragN < (s.fragmentsAccrued + s.fragmentsPerSegment))) {
+                            return segNum;
+                        }
                     }
                 }
+
             }
             return GetLastSegment().firstSegment;
         }

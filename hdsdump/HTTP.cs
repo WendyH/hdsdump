@@ -24,7 +24,7 @@ namespace hdsdump {
             return Request(url, "GET", "", out int retCode, out string status);
         }
 
-        public static byte[] Request(string url, string method, string content, out int retCode, out string status, bool noThrow=false) {
+        public static byte[] Request(string url, string method, string content, out int retCode, out string status, bool noThrow=false, bool noTextHeaders = false) {
             retCode = 200; status = "";
             byte[] ResponseData = new byte[0];
             if (!url.StartsWith("http")) {   // if not http url - try load as file
@@ -57,11 +57,14 @@ namespace hdsdump {
                 request.Proxy = null;
             } 
             request.Method = method;
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            request.Headers.Set(HttpRequestHeader.AcceptLanguage, "en-us,en;q=0.5");
-            request.Headers.Set(HttpRequestHeader.AcceptEncoding, "gzip,deflate");
-            request.Headers.Set(HttpRequestHeader.AcceptCharset , "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
+            if (noTextHeaders) {
+                request.Headers.Set("Icy-MetaData", "1");            } else {
+                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+                request.Headers.Set(HttpRequestHeader.AcceptLanguage, "en-us,en;q=0.5");
+                request.Headers.Set(HttpRequestHeader.AcceptEncoding, "gzip,deflate");
+                request.Headers.Set(HttpRequestHeader.AcceptCharset, "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
+            }
             request.Timeout   = 28000;
             request.KeepAlive = true;
             request.CookieContainer = _cookies;
@@ -120,11 +123,15 @@ namespace hdsdump {
         }
 
         public static byte[] TryGETData(string url) {
-            return Request(url, "GET", "", out int retCode, out string status, true);
+            return Request(url, "GET", "", out int retCode, out string status, true, true);
         }
 
         public static byte[] TryGETData(string url, out int retCode, out string status) {
-            return Request(url, "GET", "", out retCode, out status, true);
+            return Request(url, "GET", "", out retCode, out status, true, true);
+        }
+
+        public static byte[] TryGETData(string url, out int retCode, out string status, bool noTextHeaders) {
+            return Request(url, "GET", "", out retCode, out status, true, noTextHeaders);
         }
 
         public static string TryGET(string url) {

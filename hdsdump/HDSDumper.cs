@@ -251,7 +251,7 @@ namespace hdsdump {
         private void ShowDownloadStatus(object state = null) {
             string msg;
             if (selectedMedia.Bootstrap.live && HDSDownloader.LiveIsStalled) {
-                msg = "          <c:Magenta>Live is stalled...</c> " + FormatTS((uint)DateTime.Now.Subtract(HDSDownloader.StartedStall).Ticks);
+                msg = "<c:DarkRed>Live is stalled...</c> " + FormatTS((uint)DateTime.Now.Subtract(HDSDownloader.StartedStall).Ticks / 10000);
                 if (!Program.verbose)
                     msg += "\r";
                 Program.Message(msg);

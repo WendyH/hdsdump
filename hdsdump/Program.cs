@@ -286,7 +286,7 @@ namespace hdsdump {
                     DebugLog("manifest: " + manifestUrl);
                     sLink = manifestUrl;
                 }
-            } else if (Regex.IsMatch(sLink, "(moon.hdkinoteatr.com|moonwalk.\\w+)/\\w+/")) {
+            } else if (Regex.IsMatch(sLink, "(moon.hdkinoteatr.com|moonwalk.\\w+)/\\w+/\\w+/iframe")) {
                 GetLink_Moonwalk(sLink);
             } else if (Regex.IsMatch(sLink, "/megogo.net/")) {
                 GetLink_Megogo(sLink);
@@ -316,8 +316,8 @@ namespace hdsdump {
             HTTP.Referer = sLink;
             sData = HTTP.GET("http://rutube.ru/api/play/options/" + sID + "/?format=json&sqr4374_compat=1&no_404=true&referer="+ Uri.EscapeDataString(sLink) + "&_="+ new Random());
             m = Regex.Match(sData, "(http[^\">']+f4m[^\"}>']+)");
-            if (!m.Success) Quit("No f4m source for rutube video");
-            manifestUrl = m.Groups[1].Value;
+            if (m.Success)
+                manifestUrl = m.Groups[1].Value;
         }
 
         private static void GetLink_Megogo(string sLink) {
@@ -329,11 +329,12 @@ namespace hdsdump {
             sLink = "http://megogo.net/b/info/?&i="+sID+"&s=0&e=0&p=0&t=0&m=-1&l=ru&d=andr_iphone_ipad_winph&playerMode=html5&preview=0&h="+sLink;
             sData = HTTP.GET(sLink);
             m = Regex.Match(sData, "<src>(.*?)</");
-            if (!m.Success) Quit("No src for megogo video");
-            manifestUrl = m.Groups[1].Value.Replace("playlist.m3u8", "manifest.f4m");
-            if (string.IsNullOrEmpty(manifestUrl)) {
-                m = Regex.Match(sData, "<forbidden>(.*?)</");
-                if (m.Success) Quit(m.Groups[1].Value);
+            if (m.Success) {
+                manifestUrl = m.Groups[1].Value.Replace("playlist.m3u8", "manifest.f4m");
+                if (string.IsNullOrEmpty(manifestUrl)) {
+                    m = Regex.Match(sData, "<forbidden>(.*?)</");
+                    if (m.Success) Quit(m.Groups[1].Value);
+                }
             }
         }
 
