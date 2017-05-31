@@ -5,7 +5,7 @@ using System.Text;
 
 namespace hdsdump {
     public static class HTTP {
-        public static string Useragent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0";
+        public static string Useragent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0";
         public static string Referer   = "";
         public static string Proxy     = "";
         public static string ProxyUsername = "";
