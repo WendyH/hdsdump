@@ -137,10 +137,10 @@ namespace hdsdump {
                 if (cli.ChkParam("lang"     )) lang = cli.GetParam("lang");
                 if (cli.ChkParam("alt"      )) alt  = cli.GetParam("alt" );
 
-                if (HTTP.Referer == "") {
-                    var m = Regex.Match(manifestUrl, @"^(.*?://.*?/)");
-                    if (m.Success) HTTP.Referer = m.Groups[1].Value;
-                }
+                //if (HTTP.Referer == "") {
+                //    var m = Regex.Match(manifestUrl, @"^(.*?://.*?/)");
+                //    if (m.Success) HTTP.Referer = m.Groups[1].Value;
+                //}
 
                 if (!string.IsNullOrEmpty(headers)) {
                     foreach(string header in headers.Split(new char[] { '|', '$' })) {

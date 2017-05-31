@@ -58,7 +58,8 @@ namespace hdsdump {
             } 
             request.Method = method;
             if (noTextHeaders) {
-                request.Headers.Set("Icy-MetaData", "1");            } else {
+                request.Headers.Set("Icy-MetaData", "1");
+            } else {
                 request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
                 request.Headers.Set(HttpRequestHeader.AcceptLanguage, "en-us,en;q=0.5");
