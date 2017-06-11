@@ -118,11 +118,11 @@ namespace hdsdump {
                 if (pair.Value == "[1]") {
                     sParameters += sKey + " ";
                 } else {
-                    sValues += String.Format("<c:DarkCyan>{0,-10}: <c:DarkGreen>{1}\n\r", sKey, pair.Value);
+                    sValues += String.Format("<c:DarkCyan>{0,-10}: <c:DarkGreen>{1}\r\n", sKey, pair.Value);
                 }
             }
             if (sParameters != "") Program.Message(String.Format("<c:DarkCyan>Parameters:</c> <c:DarkGreen>{0,-10}", sParameters));
-            if (sValues     != "") Program.Message(sValues + "\n\r");
+            if (sValues     != "") Program.Message(sValues);
         }
 
         public bool ChkParam(string name) {
@@ -134,10 +134,13 @@ namespace hdsdump {
             else return string.Empty;
         }
 
-        public void DisplayHelp() {
+        public void DisplayHelpAndQuit() {
+            string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             string shrtKey = "", longKey = "";
-            if (Program.play) return;
-            Program.Message("You can use <c:White>hdsdump</c> with following switches: \n\r\n\r");
+            if (Program.isRedirected) {
+                Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            }
+            Program.Message("HDSdump v"+version+". You can use <c:White>hdsdump</c> with following switches: \r\n\r\n");
             foreach (KeyValuePair<string, string> pair in ACCEPTED[0]) {
                 shrtKey = pair.Key.Split('|')[0].Trim();
                 longKey = pair.Key.Split('|')[1].Trim();
@@ -155,6 +158,7 @@ namespace hdsdump {
                     Program.Message(String.Format(" <c:White>-{0,-2}</c>|<c:White>--{1,-10}</c><param> <c:DarkCyan>{2,-7}", shrtKey, longKey, pair.Value));
 
             }
+            Environment.Exit(0);
         }
     }
 

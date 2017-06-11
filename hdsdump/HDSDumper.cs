@@ -271,7 +271,7 @@ namespace hdsdump {
             string remaining = "";
             if (Program.showtime && !selectedMedia.Bootstrap.live && selectedMedia.Downloaded > 0 && fragsToDownload > 0) {
                 TimeSpan remainingTimeSpan = TimeSpan.FromTicks(DateTime.Now.Subtract(startTime).Ticks / selectedMedia.Downloaded * fragsToDownload);
-                remaining = String.Format(" <c:DarkCyan>Time left: </c>{0:00}<c:Cyan>:</c>{1:00}<c:Cyan>:</c>{2:00}", remainingTimeSpan.Hours, remainingTimeSpan.Minutes, remainingTimeSpan.Seconds);
+                remaining = string.Format(" <c:DarkCyan>Time left: </c>{0:00}<c:Cyan>:</c>{1:00}<c:Cyan>:</c>{2:00}", remainingTimeSpan.Hours, remainingTimeSpan.Minutes, remainingTimeSpan.Seconds);
             }
             msg += remaining;
             if (!Program.verbose)

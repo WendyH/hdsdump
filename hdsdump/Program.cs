@@ -99,9 +99,9 @@ namespace hdsdump {
                 Check4Redirect2Process(ref args);
 
                 CLI cli = new CLI(args);
+                if (cli.ChkParam("help"     )) cli.DisplayHelpAndQuit();
                 if (cli.ChkParam("waitkey"  )) waitkey = true;
                 if (cli.ChkParam("nowaitkey")) waitkey = false;
-                if (cli.ChkParam("help"     )) { cli.DisplayHelp(); Quit(""); }
                 if (cli.ChkParam("filesize" )) uint.TryParse(cli.GetParam("filesize"), out filesize);
                 if (cli.ChkParam("threads"  )) int .TryParse(cli.GetParam("threads" ), out threads );
                 if (cli.ChkParam("start"    )) uint.TryParse(cli.GetParam("start"   ), out start   );
@@ -158,7 +158,7 @@ namespace hdsdump {
                     }
                 }
 
-                String strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 ShowHeader("HDSdump by WendyH v<c:White>" + strVersion);
 
                 if (manifestUrl == "")
@@ -166,7 +166,11 @@ namespace hdsdump {
 
                 if (showtime) ShowTimeElapsed("", true);
 
-                Check4KnownLinks(ref manifestUrl);
+                Check4KnownLinks(manifestUrl);
+                cli.Params["manifest"] = manifestUrl;
+                if (HTTP.Referer.Length > 0) {
+                    cli.Params["referer"] = HTTP.Referer;
+                }
 
                 bool usePipe = outFile.IndexOf(@"\\.\pipe\") == 0;
                 cli.Params["threads"] = threads.ToString();
@@ -278,32 +282,36 @@ namespace hdsdump {
             return match.Success;
         }
 
-        private static void Check4KnownLinks(ref string sLink) {
+        private static void Check4KnownLinks(string sLink) {
+            Match m;
             if (RegExMatch(@"radio-canada.ca.*?[Mm]edia[-=](\d+)", sLink, out string id)) {
                 sLink = @"http://api.radio-canada.ca/validationMedia/v1/Validation.html?connectionType=broadband&output=json&multibitrate=true&deviceType=flashhd&appCode=medianet&idMedia=" + id + "&claims=null";
                 string text = HTTP.GET(sLink);
-                if (RegExMatch("\"url\":\"(.*?)\"", text, out manifestUrl)) {
-                    DebugLog("manifest: " + manifestUrl);
-                    sLink = manifestUrl;
-                }
+                RegExMatch("\"url\":\"(.*?)\"", text, out manifestUrl);
             } else if (Regex.IsMatch(sLink, "(moon.hdkinoteatr.com|moonwalk.\\w+)/\\w+/\\w+/iframe")) {
                 GetLink_Moonwalk(sLink);
             } else if (Regex.IsMatch(sLink, "/megogo.net/")) {
                 GetLink_Megogo(sLink);
             } else if (Regex.IsMatch(sLink, "/rutube.ru/")) {
                 GetLink_Rutube(sLink);
+            } else if (Regex.IsMatch(sLink, "spbtv.com/v1/channels/(.*?)/")) {
+                m = Regex.Match(sLink, "spbtv.com/v1/channels/(.*?)/");
+                GetLink_spbtv(m.Groups[1].Value);
             } else if (Regex.IsMatch(sLink, "spbtv.online/channels/")) {
                 string html = HTTP.GET(sLink);
-                Match m = Regex.Match(html, "channelId\\s*:\\s*'(.*?)'");
+                m = Regex.Match(html, "channelId\\s*:\\s*'(.*?)'");
                 if (m.Success) {
-                    string channelId = m.Groups[1].Value;
-                    HTTP.Referer = "http://spbtv.online/vplayer/last/GrindPlayer.swf";
-                    string data = HTTP.GET("http://tv3.spr.spbtv.com/v1/channels/" + channelId + "/stream?protocol=hds");
-                    m = Regex.Match(data, "\"url\":\"(.*?)\"");
-                    if (m.Success) {
-                        manifestUrl = Regex.Unescape(m.Groups[1].Value);
-                    }
+                    GetLink_spbtv(m.Groups[1].Value);
                 }
+            }
+        }
+
+        private static void GetLink_spbtv(string channelId) {
+            HTTP.Referer = "http://spbtv.online/vplayer/last/GrindPlayer.swf";
+            string data = HTTP.GET("http://tv3.spr.spbtv.com/v1/channels/" + channelId + "/stream?protocol=hds");
+            Match m = Regex.Match(data, "\"url\":\"(.*?)\"");
+            if (m.Success) {
+                manifestUrl = Regex.Unescape(m.Groups[1].Value);
             }
         }
 
@@ -365,9 +373,9 @@ namespace hdsdump {
                     HTTP.Headers.Set(match.Groups[1].Value, match.Groups[2].Value);
                 }
             }
-            m = Regex.Match(sHtml, "/new_session.*?(\\w+)\\s*?=\\s*?\\{(.*?)\\}", RegexOptions.Singleline);
+            m = Regex.Match(sHtml, "/new_session.*?\\{(.*?)\\}", RegexOptions.Singleline);
             if (!m.Success) Quit("Not found new_session parameters");
-            sPost = m.Groups[2].Value.Replace("\n", "").Replace(" ", "").Replace("'", "");
+            sPost = m.Groups[1].Value.Replace("\n", "").Replace(" ", "").Replace("'", "");
             sPost = sPost.Replace(':', '=').Replace(',', '&').Replace(':', '=').Replace(':', '=').Replace("condition_detected?1=", "");
             foreach (Match match in Regex.Matches(sPost, ".=(\\w+)")) {
                 m = Regex.Match(sHtml, "var\\s" + match.Groups[1].Value + "\\s*=\\s*['\"](.*?)['\"]");
@@ -382,7 +390,11 @@ namespace hdsdump {
             foreach (Match match in Regex.Matches(sHtml, "\\['(\\w+)'\\]\\s*=\\s*'(.*?)'")) {
                 sPost += "&" + match.Groups[1].Value + "=" + match.Groups[2].Value;
             }
-
+            foreach (Match match in Regex.Matches(sHtml, "window\\[[^\\]]+\\]\\[(.*?)\\]\\s*=\\s*(.*?);")) {
+                string sVar = match.Groups[1].Value.Replace("+", "").Replace(" ", "").Replace("'", "");
+                string sVal = match.Groups[2].Value.Replace("+", "").Replace(" ", "").Replace("'", "");
+                sPost += "&" + sVar + "=" + sVal;
+            }
             sData = HTTP.POST(server + "/sessions/new_session", sPost);
             m = Regex.Match(sData, "\"manifest_f4m\"\\s*?:\\s*?\"(.*?)\"");
             if (m.Success) {
@@ -445,7 +457,7 @@ namespace hdsdump {
                     Console.Write(sText);
                     spChar = "<";
                 }
-                if (!msg.EndsWith("\r")) Console.Write("\n\r");
+                if (!msg.EndsWith("\r")) Console.Write("\r\n");
                 Console.ResetColor();
             }
         }
