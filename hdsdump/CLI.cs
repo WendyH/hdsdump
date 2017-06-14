@@ -19,6 +19,7 @@ namespace hdsdump {
                     {"z |oldmethod", "use the old method to download"},
                     {"  |quiet"    , "no output any messages"},
                     {"v |verbose"  , "show exteneded info while dumping"},
+                    {"V |version"  , "print version info"},
                     {"  |testalt"  , "sets all avaliable media also as alternate"},
                     
                 },
@@ -133,14 +134,24 @@ namespace hdsdump {
             if (Params.ContainsKey(name)) return Params[name].Trim();
             else return string.Empty;
         }
+        
+        public void DisplayVersionAndQuit() {
+            string version = Program.GetFullVersion();
+            if (Program.isRedirected) {
+                Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            }
+            Program.Message(version);
+            Environment.Exit(0);
+        }
 
         public void DisplayHelpAndQuit() {
-            string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string version = Program.GetFullVersion();
             string shrtKey = "", longKey = "";
             if (Program.isRedirected) {
                 Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
             }
-            Program.Message("HDSdump v"+version+". You can use <c:White>hdsdump</c> with following switches: \r\n\r\n");
+            Program.Message(version+". You can use <c:White>hdsdump</c> with following switches:");
+            Program.Message("");
             foreach (KeyValuePair<string, string> pair in ACCEPTED[0]) {
                 shrtKey = pair.Key.Split('|')[0].Trim();
                 longKey = pair.Key.Split('|')[1].Trim();

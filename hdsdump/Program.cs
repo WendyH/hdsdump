@@ -52,6 +52,17 @@ namespace hdsdump {
             }
         }
 
+        private static string _version;
+        public static string Version {
+            get {
+                if (string.IsNullOrEmpty(_version)) {
+                    _version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                }
+                return _version;
+            }
+        }
+
+
         public static void FatalExceptionObject(object exceptionObject) {
             //if (!debug) return;
             string msg = exceptionObject.ToString() + "\r\n";
@@ -100,6 +111,7 @@ namespace hdsdump {
 
                 CLI cli = new CLI(args);
                 if (cli.ChkParam("help"     )) cli.DisplayHelpAndQuit();
+                if (cli.ChkParam("version"  )) cli.DisplayVersionAndQuit();
                 if (cli.ChkParam("waitkey"  )) waitkey = true;
                 if (cli.ChkParam("nowaitkey")) waitkey = false;
                 if (cli.ChkParam("filesize" )) uint.TryParse(cli.GetParam("filesize"), out filesize);
@@ -158,8 +170,7 @@ namespace hdsdump {
                     }
                 }
 
-                string strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                ShowHeader("HDSdump by WendyH v<c:White>" + strVersion);
+                ShowHeader("HDSdump by WendyH v<c:White>" + Version);
 
                 if (manifestUrl == "")
                     Quit("<c:Red>Please specify the manifest. (switch '<c:White>-h</c>' or '<c:White>--help</c>' for help message)");
@@ -254,6 +265,16 @@ namespace hdsdump {
                 FatalExceptionObject(huh);
             }
 
+        }
+
+        public static string GetFullVersion(bool withCreateDate = false) {
+            DateTime created = File.GetCreationTime(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string fullversion = fvi.ProductName + " v" + Version;
+            if (withCreateDate) {
+                fullversion += " Created: " + created.ToString("u");
+            }
+            return fullversion;
         }
 
         private static uint GetTimestampFromString(string time) {
