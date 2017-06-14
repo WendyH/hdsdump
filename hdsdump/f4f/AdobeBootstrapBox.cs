@@ -3,20 +3,20 @@
 namespace hdsdump.f4f {
     public class AdobeBootstrapBox: FullBox {
         public uint   bootstrapVersion;
-		public uint   profile;
-		public bool   live;
-		public bool   update;
-		public uint   timeScale;
-		public ulong  currentMediaTime;
-		public ulong  smpteTimeCodeOffset;
-		public string movieIdentifier;
-		public uint   serverEntryCount;
-		public string drmData;
-		public string metadata;
+        public uint   profile;
+        public bool   live;
+        public bool   update;
+        public uint   timeScale;
+        public ulong  currentMediaTime;
+        public ulong  smpteTimeCodeOffset;
+        public string movieIdentifier;
+        public uint   serverEntryCount;
+        public string drmData;
+        public string metadata;
         public List<string> serverBaseURLs                   = new List<string>();
         public List<string> qualitySegmentURLModifiers       = new List<string>();
         public List<AdobeSegmentRunTable>  segmentRunTables  = new List<AdobeSegmentRunTable>();
-		public List<AdobeFragmentRunTable> fragmentRunTables = new List<AdobeFragmentRunTable>();
+        public List<AdobeFragmentRunTable> fragmentRunTables = new List<AdobeFragmentRunTable>();
 
         public override void Parse(BoxInfo bi, HDSBinaryReader br) {
             base.Parse(bi, br);
@@ -142,9 +142,9 @@ namespace hdsdump.f4f {
 
         ///<summary>The total number of fragments in the movie.</summary>
         public uint GetFragmentsCount()
-		{
+        {
             AdobeFragmentRunTable      lastFragmentTable = fragmentRunTables[fragmentRunTables.Count - 1];
-			List<FragmentDurationPair> fdps              = lastFragmentTable.fragmentDurationPairs;
+            List<FragmentDurationPair> fdps              = lastFragmentTable.fragmentDurationPairs;
 
             if (fdps.Count < 1) {
                 SegmentFragmentPair lastSegment = GetLastSegment();
@@ -152,14 +152,14 @@ namespace hdsdump.f4f {
             }
 
             FragmentDurationPair lastValidFdp = fdps[fdps.Count - 1];
-			if (lastValidFdp.duration == 0) {
-				lastValidFdp = fdps[fdps.Count - 2];
-			}
+            if (lastValidFdp.duration == 0) {
+                lastValidFdp = fdps[fdps.Count - 2];
+            }
 
             int  deltaTime = (int)(currentMediaTime - lastValidFdp.durationAccrued);
             uint fragCount = (uint)((deltaTime <= 0) ? 0 : (deltaTime / lastValidFdp.duration));
-			return lastValidFdp.firstFragment + fragCount - 1;
-		}
+            return lastValidFdp.firstFragment + fragCount - 1;
+        }
 
 
         public uint GetSegmentFromFragment(uint fragN) {
@@ -206,7 +206,7 @@ namespace hdsdump.f4f {
 
         public bool ContentComplete() {
             AdobeFragmentRunTable lastFrt = fragmentRunTables[fragmentRunTables.Count - 1];
-			return lastFrt.tableComplete();			
-		}
+            return lastFrt.tableComplete();			
+        }
     }
 }

@@ -23,19 +23,19 @@ namespace hdsdump.f4m {
         public string type;
 
         /// <summary>
-		/// The label of the media.
+        /// The label of the media.
         /// </summary>
-		public string label;
+        public string label;
 
         /// <summary>
-		/// The language of the media.
+        /// The language of the media.
         /// </summary>
-		public string lang;
+        public string lang;
 
         /// <summary>
-		/// Flag indicating that this is an alternate media.
+        /// Flag indicating that this is an alternate media.
         /// </summary>
-		public bool alternate;
+        public bool alternate;
 
         public string audioCodec;
         public string videoCodec;
@@ -66,10 +66,10 @@ namespace hdsdump.f4m {
         public byte[] xmp;
 
         /// <summary>
-		/// Represents the Movie Box, or "moov" atom, for one representation of 
-	    /// the piece of media. It is an optional child element of &lt;media&gt;.
+        /// Represents the Movie Box, or "moov" atom, for one representation of 
+        /// the piece of media. It is an optional child element of &lt;media&gt;.
         /// </summary>
-		public byte[] moov;
+        public byte[] moov;
 
         /// <summary>
         /// Width of the resource in pixels.

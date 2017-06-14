@@ -25,22 +25,22 @@ namespace hdsdump.f4m {
     /// </summary>
     public class BestEffortFetchInfo {
         public static uint DEFAULT_MAX_FORWARD_FETCHES  = 2;
-		
-		public static uint DEFAULT_MAX_BACKWARD_FETCHES = 2;
+        
+        public static uint DEFAULT_MAX_BACKWARD_FETCHES = 2;
 
-		public uint maxForwardFetches  = DEFAULT_MAX_FORWARD_FETCHES;
-		
-		public uint maxBackwardFetches = DEFAULT_MAX_BACKWARD_FETCHES;
+        public uint maxForwardFetches  = DEFAULT_MAX_FORWARD_FETCHES;
+        
+        public uint maxBackwardFetches = DEFAULT_MAX_BACKWARD_FETCHES;
 
         /// <summary>
         /// The typical duration of a segment (in milliseconds)
         /// </summary>
         public uint segmentDuration = 0;
-		
+        
         /// <summary>
-		/// The typical duration of a fragment (in milliseconds)
+        /// The typical duration of a fragment (in milliseconds)
         /// </summary>
-		public uint fragmentDuration = 0;
+        public uint fragmentDuration = 0;
 
         // CONSTRUCTOR
         public BestEffortFetchInfo(XmlNodeEx node, string baseURL = "", string idPrefix = "") {

@@ -6,7 +6,7 @@ namespace hdsdump {
     class CLI {
         protected static Dictionary<string, string>[] ACCEPTED = {
                 new Dictionary<string,string> {
-					// Single switches
+                    // Single switches
                     {"h |help"     , "displays this help"},
                     {"l |debug"    , "out debug output to log file"},
                     {"p |play"     , "dump flv data to stderr for piping to another program"},
@@ -19,12 +19,12 @@ namespace hdsdump {
                     {"z |oldmethod", "use the old method to download"},
                     {"  |quiet"    , "no output any messages"},
                     {"v |verbose"  , "show exteneded info while dumping"},
-                    {"V |version"  , "print version info"},
+                    {"V |version"  , "print version"},
                     {"  |testalt"  , "sets all avaliable media also as alternate"},
                     
                 },
                 new Dictionary<string,string> {
-					// Switches with parameters
+                    // Switches with parameters
                     {"a |auth"     , "authentication string for fragment requests (add '?' with parameter to end manifest url)"},
                     {"t |duration" , "stop dumping after specified time in the file (hh:mm:ss)"},
                     {"fs|filesize" , "limit size of the output file"},
@@ -140,7 +140,7 @@ namespace hdsdump {
             if (Program.isRedirected) {
                 Console.SetOut(new System.IO.StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
             }
-            Program.Message(version);
+            Console.Write(version);
             Environment.Exit(0);
         }
 

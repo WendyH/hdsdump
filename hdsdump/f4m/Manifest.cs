@@ -36,18 +36,18 @@ namespace hdsdump.f4m {
         public string label;
 
         /// <summary>
-		/// The lang element represents a language code identifier for the media. It is optional.
+        /// The lang element represents a language code identifier for the media. It is optional.
         /// </summary>
-		public string lang;
+        public string lang;
 
         /// <summary>
-		/// The &lt;baseURL&gt; element contains the base URL for all relative (HTTP-based) URLs 
-		/// in the manifest. It is optional. When specified, its value is prepended to all 
-		/// relative URLs (i.e. those URLs that don't begin with "http://" or "https://" 
-		/// within the manifest file. (Such URLs may include &lt;media&gt; URLs, &lt;bootstrapInfo&gt; 
-		/// URLs, and &lt;drmMetadata&gt; URLs.) 
+        /// The &lt;baseURL&gt; element contains the base URL for all relative (HTTP-based) URLs 
+        /// in the manifest. It is optional. When specified, its value is prepended to all 
+        /// relative URLs (i.e. those URLs that don't begin with "http://" or "https://" 
+        /// within the manifest file. (Such URLs may include &lt;media&gt; URLs, &lt;bootstrapInfo&gt; 
+        /// URLs, and &lt;drmMetadata&gt; URLs.) 
         /// </summary>
-		public string baseURL;
+        public string baseURL;
 
         /// <summary>
         /// Indicate whether the media URL includes FMS application instance. This is only applicable to RTMP URLs.
@@ -55,11 +55,11 @@ namespace hdsdump.f4m {
         public bool urlIncludesFMSApplicationInstance = false;
 
         /// <summary>
-		/// The &lt;duration&gt; element represents the duration of the media, in seconds. 
-		/// It is assumed that all representations of the media have the same duration, 
-		/// hence its placement under the document root. It is optional.
+        /// The &lt;duration&gt; element represents the duration of the media, in seconds. 
+        /// It is assumed that all representations of the media have the same duration, 
+        /// hence its placement under the document root. It is optional.
         /// </summary>
-		public float duration;
+        public float duration;
 
         /// <summary>
         /// The &lt;mimeType&gt; element represents the MIME type of the media file. It is assumed 
@@ -105,21 +105,21 @@ namespace hdsdump.f4m {
         public List<DRMAdditionalHeader> drmAdditionalHeaders = new List<DRMAdditionalHeader>();
 
         /// <summary>
-		/// The set of different bitrate streams associated with this media.
+        /// The set of different bitrate streams associated with this media.
         /// </summary>
-		public List<Media> media = new List<Media>();
+        public List<Media> media = new List<Media>();
 
         /// <summary>
         /// The set of alternative streams associated with this media.
         /// </summary>
         public List<Media> alternativeMedia = new List<Media>();
-		
-		/// <summary>
+        
+        /// <summary>
         /// The dvrInfo element. It is needed to play DVR media.
         /// </summary>
-		public DVRInfo dvrInfo = null;
-		
-		public BestEffortFetchInfo bestEffortFetchInfo = null;
+        public DVRInfo dvrInfo = null;
+        
+        public BestEffortFetchInfo bestEffortFetchInfo = null;
 
         public List<CueInfo> cueInfos = new List<CueInfo>();
 
@@ -233,7 +233,7 @@ namespace hdsdump.f4m {
         /// if not specified.
         /// </summary>
         private void GenerateRTMPBaseURL() {
-			if (string.IsNullOrEmpty(baseURL)) {
+            if (string.IsNullOrEmpty(baseURL)) {
                 foreach (var mediaItem in media) {
                     if (NetStreamUtils.isRTMPStream(mediaItem.url)) {
                         baseURL = mediaItem.url;

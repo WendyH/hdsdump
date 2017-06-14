@@ -22,7 +22,7 @@
 namespace hdsdump.f4m {
     public class DVRInfo {
         /// <summary>
-		/// The ID of this &lt;dvrInfo&gt; element.It is optional.If it is not specified,
+        /// The ID of this &lt;dvrInfo&gt; element.It is optional.If it is not specified,
         /// then none of the media elements is of DVR content.If it is specified, it is applicable to all
         /// the media elements are DVR contents.
         /// </summary>
@@ -35,22 +35,22 @@ namespace hdsdump.f4m {
         public string url;
 
         /// <summary>
-		/// The offset, in seconds, from the beginning of the recorded stream. Client can begin viewing
-		/// the stream at this location. It is optional, and defaults to zero.
+        /// The offset, in seconds, from the beginning of the recorded stream. Client can begin viewing
+        /// the stream at this location. It is optional, and defaults to zero.
         /// </summary>
-		public int beginOffset = 0;
+        public int beginOffset = 0;
 
         /// <summary>
-		/// The amoutn of data, in seconds, that client can begin viewing
-		/// from the current media time. It is optional, and defaults to zero.
+        /// The amoutn of data, in seconds, that client can begin viewing
+        /// from the current media time. It is optional, and defaults to zero.
         /// </summary>
-		public int endOffset = 0;
+        public int endOffset = 0;
 
         /// <summary>
-		/// The window length on the server, in seconds: represents the maximum 
-		/// length of the content.
+        /// The window length on the server, in seconds: represents the maximum 
+        /// length of the content.
         /// </summary>
-		public int windowDuration = -1;
+        public int windowDuration = -1;
 
         /// <summary>
         /// Indicates whether the stream is offline, or available for playback. It is optional, and defaults to false. 
@@ -63,14 +63,14 @@ namespace hdsdump.f4m {
         public bool isRecording;
 
         /// <summary>
-		/// Indicates the current total length of the content. 
+        /// Indicates the current total length of the content. 
         /// </summary>
-		public uint curLength;
+        public uint curLength;
 
         /// <summary>
-		/// Indicates the starting position when the DVR content is loaded and about to play. 
+        /// Indicates the starting position when the DVR content is loaded and about to play. 
         /// </summary>
-		public uint startTime;
+        public uint startTime;
 
         // Constructor
         public DVRInfo(XmlNodeEx node, string baseURL = "", string idPrefix = "") {

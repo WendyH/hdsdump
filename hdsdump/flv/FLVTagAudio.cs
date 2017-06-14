@@ -3,17 +3,17 @@ using System;
 namespace hdsdump.flv {
     public class FLVTagAudio : FLVTag {
 
-		public FLVTagAudio(TagType type = TagType.AUDIO): base(type) {
-		}
-		
-		public int SoundFormatByte {
+        public FLVTagAudio(TagType type = TagType.AUDIO): base(type) {
+        }
+        
+        public int SoundFormatByte {
             get { return Data[0]; }
-			set { Data[0] = (byte)value; }
-		}
-		
-		public Format SoundFormat {
+            set { Data[0] = (byte)value; }
+        }
+        
+        public Format SoundFormat {
             get { return (Format)((Data[0] >> 4) & 0x0f); }
-			set {
+            set {
                 Data[0] &= 0x0f;    // clear upper 4 bits
                 Data[0] |= (byte)(((int)value << 4) & 0xf0);
 
@@ -24,8 +24,8 @@ namespace hdsdump.flv {
                 }
             }
         }
-		
-		public Rate SoundRate {
+        
+        public Rate SoundRate {
             get {
                 switch ((Data[0] >> 2) & 0x03) {
                     case 0 : return Rate._5K;
@@ -49,8 +49,8 @@ namespace hdsdump.flv {
             }
         }
 
-		
-		public AudioSize SoundSize {
+        
+        public AudioSize SoundSize {
             get {
                 if (((Data[0] >> 1) & 0x01) > 0) return AudioSize._16BITS;
                 else                             return AudioSize._8BITS;
@@ -69,8 +69,8 @@ namespace hdsdump.flv {
 
             }
         }
-		
-		public Channels SoundChannels {
+        
+        public Channels SoundChannels {
             get { return ((Data[0] & 0x01) > 0) ? Channels.STEREO : Channels.MONO; }
             set {
                 switch (value) {
@@ -79,8 +79,8 @@ namespace hdsdump.flv {
                 }
             }
         }
-		
-		public bool IsAACSequenceHeader {
+        
+        public bool IsAACSequenceHeader {
             get { return (SoundFormat != Format.AAC) ? false : Data[1] == 0; }
             set {
                 if (SoundFormat != Format.AAC) {

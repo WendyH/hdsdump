@@ -11,7 +11,7 @@ namespace hdsdump.f4m {
 
         /// <summary>
         /// Returns the version based on the default namespace of the F4M example.
-		/// <p>An example of a version 1.0 namespace: "http://ns.adobe.com/f4m/1.0"</p>
+        /// <p>An example of a version 1.0 namespace: "http://ns.adobe.com/f4m/1.0"</p>
         /// </summary>
         public static Version getVersion(string resource) {
             Version version = new Version();
@@ -27,11 +27,11 @@ namespace hdsdump.f4m {
                 if (m.Success) int.TryParse(m.Groups[1].Value, out version.Minor);
             }
             return version;
-		}
+        }
 
         /// <summary>
         /// Returns the version based on the default namespace of the F4M example.
-		/// <p>An example of a version 1.0 namespace: "http://ns.adobe.com/f4m/1.0"</p>
+        /// <p>An example of a version 1.0 namespace: "http://ns.adobe.com/f4m/1.0"</p>
         /// </summary>
         public static Version getVersion(XmlNodeEx node) {
             return getVersion(node.OwnerDocument.OuterXml);

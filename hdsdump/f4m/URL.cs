@@ -8,7 +8,7 @@
 
         /// <summary>
         /// Normalizes a root URL. It adds a trailing slash (/) if not present.
-		/// It is assumed that the passed url is an absolute root url.No checks will be performed to validate this.
+        /// It is assumed that the passed url is an absolute root url.No checks will be performed to validate this.
         /// </summary>
         /// <param name="url">base url string</param>
         /// <returns>Returns url with "/" in the end.</returns>
@@ -17,8 +17,8 @@
         }
 
         /// <summary>
-		/// Normalizes a relative URL. It removes the leading slash (/) if present.
-		/// It is assumed that the passed url is a relative one. No checks will be performed to validate this.
+        /// Normalizes a relative URL. It removes the leading slash (/) if present.
+        /// It is assumed that the passed url is a relative one. No checks will be performed to validate this.
         /// </summary>
         public static string normalizeRelativeURL(string url) {
             return (!string.IsNullOrEmpty(url) && !url.StartsWith("/")) ? url.Substring(1) : url;
@@ -26,34 +26,34 @@
 
         /// <summary>
         /// Normalizes the path for the specified URL.
-		/// Removes any query parameters or file.
+        /// Removes any query parameters or file.
         /// </summary>
         public static string normalizePathForURL(string url, bool removeFilePart) {
             if (string.IsNullOrEmpty(url))
                 return string.Empty;
-			string result = url;
+            string result = url;
             System.Uri uri = new System.Uri(url);
             if (uri.IsAbsoluteUri) {
-				result = uri.Scheme + "://" + uri.Host;
-				if (((uri.Scheme=="http") && (uri.Port!=80)) || ((uri.Scheme == "https") && (uri.Port != 443))) {
-					result += ":" + uri.Port;
-				}
+                result = uri.Scheme + "://" + uri.Host;
+                if (((uri.Scheme=="http") && (uri.Port!=80)) || ((uri.Scheme == "https") && (uri.Port != 443))) {
+                    result += ":" + uri.Port;
+                }
                 string path = uri.LocalPath;
-				if (path != null && path.Length > 0) {
-					if (removeFilePart) {
-						int index = path.LastIndexOf("/");
+                if (path != null && path.Length > 0) {
+                    if (removeFilePart) {
+                        int index = path.LastIndexOf("/");
                         if (index >= 0)
-    						path = path.Substring(0, index+1);
-					}
+                            path = path.Substring(0, index+1);
+                    }
                     if ((path.Length > 0) && (path[0]=='/')) {
                         result += path;
                     } else {
                         result += "/" + normalizeRelativeURL(path);
                     }
                 }
-			}
-			return normalizeRootURL(result);
-		}
+            }
+            return normalizeRootURL(result);
+        }
 
         public static string getAbsoluteUrl(string baseUrl, string url) {
             if (string.IsNullOrEmpty(url))
@@ -67,13 +67,13 @@
             if (string.IsNullOrEmpty(url))
                 return false;
             return new System.Uri(url).IsAbsoluteUri;
-		}
+        }
 
         public static string getRootUrl(string url) {
             if (string.IsNullOrEmpty(url))
                 return string.Empty;
             return url.Substring(0, url.LastIndexOf("/"));
-		}
+        }
 
         public static string ExtractBaseUrl(string dataUrl) {
             if (string.IsNullOrEmpty(dataUrl))

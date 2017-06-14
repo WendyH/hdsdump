@@ -1,7 +1,7 @@
 ﻿namespace hdsdump.f4f {
     public class BoxInfo {
         public uint   Size;
-		public string Type;
+        public string Type;
         public uint   Length = 0;
 
         // CONSTUCTOR

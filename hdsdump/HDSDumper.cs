@@ -198,14 +198,14 @@ namespace hdsdump {
         }
 
         private void UpdateTimes(FLVTag tag) {
-			if (tag != null) {
-				if (tag is FLVTagAudio) {
-					_alternateTime = tag.Timestamp;
-				} else {
-					_mediaTime = tag.Timestamp;
-				}
-			}
-		}
+            if (tag != null) {
+                if (tag is FLVTagAudio) {
+                    _alternateTime = tag.Timestamp;
+                } else {
+                    _mediaTime = tag.Timestamp;
+                }
+            }
+        }
         
         public void ShowMessageAtTheEnd() {
             DestroyUpdateStatusTimer();
@@ -218,27 +218,27 @@ namespace hdsdump {
         }
 
         private bool ShouldFilterTag(FLVTag tag, TagsFilter filterTags) {
-			if (tag == null) return true;
-			
-			// if the timestamp is lower than the current time
-			if (_currentTime != INVALID_TIME && tag.Timestamp < _currentTime) {
+            if (tag == null) return true;
+            
+            // if the timestamp is lower than the current time
+            if (_currentTime != INVALID_TIME && tag.Timestamp < _currentTime) {
                 tag.Timestamp = _currentTime;
                 //return true;
-			}
-			
-			switch (tag.Type) {
-				case FLVTag.TagType.AUDIO:
-				case FLVTag.TagType.AKAMAI_ENC_AUDIO:
-					return (TagsFilter.AUDIO & filterTags) == 0 || (_alternateTime != INVALID_TIME && tag.Timestamp < _alternateTime);
-				
-				case FLVTag.TagType.VIDEO:
-				case FLVTag.TagType.AKAMAI_ENC_VIDEO:
-					return (TagsFilter.VIDEO & filterTags) == 0 || (_mediaTime != INVALID_TIME && tag.Timestamp < _mediaTime);
+            }
+            
+            switch (tag.Type) {
+                case FLVTag.TagType.AUDIO:
+                case FLVTag.TagType.AKAMAI_ENC_AUDIO:
+                    return (TagsFilter.AUDIO & filterTags) == 0 || (_alternateTime != INVALID_TIME && tag.Timestamp < _alternateTime);
+                
+                case FLVTag.TagType.VIDEO:
+                case FLVTag.TagType.AKAMAI_ENC_VIDEO:
+                    return (TagsFilter.VIDEO & filterTags) == 0 || (_mediaTime != INVALID_TIME && tag.Timestamp < _mediaTime);
 
-			}	
-		
-			return true;
-		}
+            }	
+        
+            return true;
+        }
 
         public static string FormatTS(uint ts, bool withMS = false) {
             TimeSpan time = TimeSpan.FromMilliseconds(ts);

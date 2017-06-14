@@ -14,12 +14,12 @@
         public string url;
 
         /// <summary>
-		/// The ID of this &lt;AdditionalHeader&gt; element. It is optional. If it is not specified, 
-		/// then this AdditionalHeader block will apply to all &lt;media&gt; elements that don't have an 
-		/// AdditionalHeader property. If it is specified, then this AdditionalHeader block will apply 
-		/// only to those &lt;media&gt; elements that use the same ID in their AddionalHeader object.
+        /// The ID of this &lt;AdditionalHeader&gt; element. It is optional. If it is not specified, 
+        /// then this AdditionalHeader block will apply to all &lt;media&gt; elements that don't have an 
+        /// AdditionalHeader property. If it is specified, then this AdditionalHeader block will apply 
+        /// only to those &lt;media&gt; elements that use the same ID in their AddionalHeader object.
         /// </summary>
-		public string id;
+        public string id;
 
         // CONSTRUCTOR
         public DRMAdditionalHeader() {

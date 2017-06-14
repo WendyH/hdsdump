@@ -2,6 +2,6 @@
     public class FragmentAccessInformation {
         public uint fragId;
         public uint fragmentEndTime;
-		public uint fragDuration;
+        public uint fragDuration;
     }
 }

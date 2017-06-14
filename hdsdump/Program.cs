@@ -394,8 +394,8 @@ namespace hdsdump {
                     HTTP.Headers.Set(match.Groups[1].Value, match.Groups[2].Value);
                 }
             }
-            m = Regex.Match(sHtml, "/new_session.*?\\{(.*?)\\}", RegexOptions.Singleline);
-            if (!m.Success) Quit("Not found new_session parameters");
+            m = Regex.Match(sHtml, "window\\[[^]]+]\\s*=\\s*\\{(.*?)\\}", RegexOptions.Singleline);
+            if (!m.Success) Quit("Not found post parameters in moonwalk iframe");
             sPost = m.Groups[1].Value.Replace("\n", "").Replace(" ", "").Replace("'", "");
             sPost = sPost.Replace(':', '=').Replace(',', '&').Replace(':', '=').Replace(':', '=').Replace("condition_detected?1=", "");
             foreach (Match match in Regex.Matches(sPost, ".=(\\w+)")) {
@@ -416,7 +416,9 @@ namespace hdsdump {
                 string sVal = match.Groups[2].Value.Replace("+", "").Replace(" ", "").Replace("'", "");
                 sPost += "&" + sVar + "=" + sVal;
             }
-            sData = HTTP.POST(server + "/sessions/new_session", sPost);
+            m = Regex.Match(sHtml, "'(/manifests/.*?)'");
+            if (!m.Success) Quit("Not found url for POST query in moonwalk iframe");
+            sData = HTTP.POST(server + m.Groups[1].Value, sPost);
             m = Regex.Match(sData, "\"manifest_f4m\"\\s*?:\\s*?\"(.*?)\"");
             if (m.Success) {
                 manifestUrl = Regex.Unescape(m.Groups[1].Value);

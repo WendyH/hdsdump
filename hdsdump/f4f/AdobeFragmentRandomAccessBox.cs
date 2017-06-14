@@ -7,9 +7,9 @@ namespace hdsdump.f4f {
         public List<GlobalRandomAccessEntry> globalRandomAccessEntries = new List<GlobalRandomAccessEntry>();
 
         private const uint FULL_BOX_FIELD_FLAGS_LENGTH = 3;
-		private const uint AFRA_MASK_LONG_ID           = 128;
-		private const uint AFRA_MASK_LONG_OFFSET       = 64;
-		private const uint AFRA_MASK_GLOBAL_ENTRIES    = 32;
+        private const uint AFRA_MASK_LONG_ID           = 128;
+        private const uint AFRA_MASK_LONG_OFFSET       = 64;
+        private const uint AFRA_MASK_GLOBAL_ENTRIES    = 32;
 
         public override void Parse(BoxInfo bi, HDSBinaryReader br) {
             base.Parse(bi, br);
@@ -47,15 +47,15 @@ namespace hdsdump.f4f {
         /// </summary>
         public LocalRandomAccessEntry findNearestKeyFrameOffset(uint seekToTime) {
             int i = localRandomAccessEntries.Count - 1;
-			while (i >= 0) {
+            while (i >= 0) {
                 LocalRandomAccessEntry entry = localRandomAccessEntries[i];
-				if (entry.time <= seekToTime) {
+                if (entry.time <= seekToTime) {
                     return entry;
                 }
                 i--;
-			}
-			return null;
-		}
+            }
+            return null;
+        }
 
     }
 }

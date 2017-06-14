@@ -4,7 +4,7 @@ using System.IO;
 namespace hdsdump.flv {
     public class FLVTag {
         public const int TAG_HEADER_BYTE_COUNT = 11;
-		public const int PREV_TAG_BYTE_COUNT   = 4;
+        public const int PREV_TAG_BYTE_COUNT   = 4;
 
         /// <summary>
         /// Indicates if packets are filtered.

@@ -44,7 +44,7 @@ namespace hdsdump.f4f {
         }
 
         /// <summary>
-		/// Given a fragment id, check whether the current fragment is valid or a discontinuity.
+        /// Given a fragment id, check whether the current fragment is valid or a discontinuity.
         /// If the latter, skip to the nearest fragment and return the new fragment id.
         /// 
         /// return the Id of the fragment that is valid.
@@ -222,11 +222,11 @@ namespace hdsdump.f4f {
         /// </summary>
         public uint firstFragmentId {
             get {
-			    FragmentDurationPair fdp = findNextValidFragmentDurationPair(0);
-			    if(fdp == null) {
-				    return 0;
-			    }
-			    return fdp.firstFragment;
+                FragmentDurationPair fdp = findNextValidFragmentDurationPair(0);
+                if(fdp == null) {
+                    return 0;
+                }
+                return fdp.firstFragment;
             }
         }
 
@@ -236,54 +236,54 @@ namespace hdsdump.f4f {
         /// returns false if fragment greater or equal last fragment number
         /// </summary>
         public bool isFragmentInGap(uint fragmentId) {
-			bool inGap = false;
+            bool inGap = false;
             forEachGap(delegate(FragmentDurationPair fdp, FragmentDurationPair prevFdp, FragmentDurationPair nextFdp) {
-				uint gapStartFragmentId = fdp.firstFragment;
+                uint gapStartFragmentId = fdp.firstFragment;
                 uint gapEndFragmenId    = nextFdp.firstFragment;
-				if (gapStartFragmentId <= fragmentId && fragmentId<gapEndFragmenId) {
-					inGap = true;
-				}
-				return !inGap;
-			});
-			return inGap;
+                if (gapStartFragmentId <= fragmentId && fragmentId<gapEndFragmenId) {
+                    inGap = true;
+                }
+                return !inGap;
+            });
+            return inGap;
         }
 
         /// <summary>
-		/// return true if the fragment is time is in a true gap within the middle of the content (discontinuity type 2).
-		/// returns false if time is less time of the first fragment
-		/// returns false if time is greater or equal time the last fragment
+        /// return true if the fragment is time is in a true gap within the middle of the content (discontinuity type 2).
+        /// returns false if time is less time of the first fragment
+        /// returns false if time is greater or equal time the last fragment
         /// </summary>
         public bool isTimeInGap(uint time, uint fragmentInterval) {
-			bool inGap = false;
+            bool inGap = false;
 
             forEachGap(delegate (FragmentDurationPair fdp, FragmentDurationPair prevFdp, FragmentDurationPair nextFdp) {
-				uint prevEndTime       = (uint)prevFdp.durationAccrued + prevFdp.duration* (fdp.firstFragment - prevFdp.firstFragment);
+                uint prevEndTime       = (uint)prevFdp.durationAccrued + prevFdp.duration* (fdp.firstFragment - prevFdp.firstFragment);
                 uint nextStartTime     = (uint)nextFdp.durationAccrued;
                 uint idealGapStartTime = (Math.Max(fdp.firstFragment, 1)-1) * fragmentInterval;
                 uint idealGapEndTime   = (Math.Max(Math.Max(nextFdp.firstFragment, fdp.firstFragment + 1), 1) - 1) * fragmentInterval;
                 uint gapStartTime      = Math.Min(prevEndTime, idealGapStartTime);
                 uint gapEndTime        = Math.Max(nextStartTime, idealGapEndTime);
-				if(gapStartTime <= time && time < gapEndTime) {
-					inGap = true;
-				}
-				return !inGap;
-			});
-			return inGap;
+                if(gapStartTime <= time && time < gapEndTime) {
+                    inGap = true;
+                }
+                return !inGap;
+            });
+            return inGap;
         }
-		
+        
         /// <summary>
-		/// return the number of fragments within a gap (discontinuity 2)
+        /// return the number of fragments within a gap (discontinuity 2)
         /// </summary>
-		public uint countGapFragments() {
+        public uint countGapFragments() {
             uint count = 0;
 
             forEachGap(delegate (FragmentDurationPair fdp, FragmentDurationPair prevFdp, FragmentDurationPair nextFdp) {
                 uint gapStartFragmentId = fdp.firstFragment;
                 uint gapEndFragmentId   = (uint)(Math.Max(nextFdp.firstFragment, gapStartFragmentId));
-				count += gapEndFragmentId - gapStartFragmentId;
+                count += gapEndFragmentId - gapStartFragmentId;
                 return true;
-			});
-			return count;
+            });
+            return count;
         }
 
         /// <summary>
@@ -298,43 +298,43 @@ namespace hdsdump.f4f {
         /// if f returns true, iteration will continue
         /// </summary>
         private void forEachGap(Func<FragmentDurationPair, FragmentDurationPair, FragmentDurationPair, bool> f) {
-			if (fragmentDurationPairs.Count <= 0) {
-				return;
-			}
-			
-			// search for gaps, then check if the desired time is in that gap
-			for(int i = 0; i < fragmentDurationPairs.Count; ++i) {
+            if (fragmentDurationPairs.Count <= 0) {
+                return;
+            }
+            
+            // search for gaps, then check if the desired time is in that gap
+            for(int i = 0; i < fragmentDurationPairs.Count; ++i) {
                 FragmentDurationPair fdp = fragmentDurationPairs[i];
-				
-				if (fdp.duration != 0 || fdp.discontinuityIndicator != 2) {
-					// skip until we find a discontinuity of type 2
-					continue;
-				}
-				
-				// gaps should only be present in the middle of content,
-				// so there should always be a previous valid entry and 
-				// a next valid entry.
-				
-				// figure out the previous valid entry
-				FragmentDurationPair prevFdp = findPrevValidFragmentDurationPair(i);
-				if (prevFdp == null // very uncommon case: there are no non-discontinuities before the discontinuity
-					|| prevFdp.firstFragment > fdp.firstFragment) // very uncommon case: fragment numbers are out of order
-				{
-					continue;
-				}
+                
+                if (fdp.duration != 0 || fdp.discontinuityIndicator != 2) {
+                    // skip until we find a discontinuity of type 2
+                    continue;
+                }
+                
+                // gaps should only be present in the middle of content,
+                // so there should always be a previous valid entry and 
+                // a next valid entry.
+                
+                // figure out the previous valid entry
+                FragmentDurationPair prevFdp = findPrevValidFragmentDurationPair(i);
+                if (prevFdp == null // very uncommon case: there are no non-discontinuities before the discontinuity
+                    || prevFdp.firstFragment > fdp.firstFragment) // very uncommon case: fragment numbers are out of order
+                {
+                    continue;
+                }
 
                 // search forwards for the first non-discontinuity
                 FragmentDurationPair nextFdp = findNextValidFragmentDurationPair(i+1);
-				if(nextFdp == null // very uncommon case: there are no valid fragments after the discontinuity
-					|| fdp.firstFragment > nextFdp.firstFragment) // very uncommon case: fragment numbers are out of order
-				{
-					continue;
-				}
-				
-				bool shouldContinue = f(fdp, prevFdp, nextFdp);
-				if (!shouldContinue)
-					return;
-			}
+                if(nextFdp == null // very uncommon case: there are no valid fragments after the discontinuity
+                    || fdp.firstFragment > nextFdp.firstFragment) // very uncommon case: fragment numbers are out of order
+                {
+                    continue;
+                }
+                
+                bool shouldContinue = f(fdp, prevFdp, nextFdp);
+                if (!shouldContinue)
+                    return;
+            }
         }
 
         /// <summary>
@@ -354,43 +354,43 @@ namespace hdsdump.f4f {
             uint desiredFragmentId = 0;
 
             forEachInterval(delegate (FragmentDurationPair fdp, bool isLast, uint startFragmentId, uint endFragmentId, uint startTime, uint endTime) {
-				if (fragmentId<startFragmentId) {
-					// before the given interval
-					desiredFdp = fdp;
-					desiredFragmentId = startFragmentId;
-					return false; // stop iterating
-				} else if(isLast) {
-					// catch all in the last entry
-					desiredFdp = fdp;
-					desiredFragmentId = fragmentId;
-					return false;
-				} else if(fragmentId<endFragmentId) {
-					// between the start and end of this interval
-					desiredFdp = fdp;
-					desiredFragmentId = fragmentId;
-					return false; // stop iterating
-				} else {
-					// beyond this interval, but not the last entry 
-					return true; // keep iterating
-				}
-			});
-			
-			if(desiredFdp == null) {
-				// no fragment entries case
-				return null;
-			}
-			
-			if(desiredFragmentId<desiredFdp.firstFragment) {
-				// probably won't ever hit this
-				// just make sure that we're before the start 
-				desiredFragmentId = desiredFdp.firstFragment;
-			}
+                if (fragmentId<startFragmentId) {
+                    // before the given interval
+                    desiredFdp = fdp;
+                    desiredFragmentId = startFragmentId;
+                    return false; // stop iterating
+                } else if(isLast) {
+                    // catch all in the last entry
+                    desiredFdp = fdp;
+                    desiredFragmentId = fragmentId;
+                    return false;
+                } else if(fragmentId<endFragmentId) {
+                    // between the start and end of this interval
+                    desiredFdp = fdp;
+                    desiredFragmentId = fragmentId;
+                    return false; // stop iterating
+                } else {
+                    // beyond this interval, but not the last entry 
+                    return true; // keep iterating
+                }
+            });
+            
+            if(desiredFdp == null) {
+                // no fragment entries case
+                return null;
+            }
+            
+            if(desiredFragmentId<desiredFdp.firstFragment) {
+                // probably won't ever hit this
+                // just make sure that we're before the start 
+                desiredFragmentId = desiredFdp.firstFragment;
+            }
 
             FragmentAccessInformation fai = new FragmentAccessInformation();
             fai.fragId          = desiredFragmentId;
-			fai.fragDuration    = desiredFdp.duration;
-			fai.fragmentEndTime = (uint)desiredFdp.durationAccrued + (desiredFragmentId - desiredFdp.firstFragment + 1) * desiredFdp.duration;
-			return fai;
+            fai.fragDuration    = desiredFdp.duration;
+            fai.fragmentEndTime = (uint)desiredFdp.durationAccrued + (desiredFragmentId - desiredFdp.firstFragment + 1) * desiredFdp.duration;
+            return fai;
         }
 
 
@@ -408,41 +408,41 @@ namespace hdsdump.f4f {
         /// </summary>
         public FragmentAccessInformation getFragmentWithTimeGreq(uint fragmentTime) {
             FragmentDurationPair desiredFdp = null;
-			uint desiredFragmentStartTime   = 0;
+            uint desiredFragmentStartTime   = 0;
 
             forEachInterval(delegate (FragmentDurationPair fdp, bool isLast, uint startFragmentId, uint endFragmentId, uint startTime, uint endTime) {
-				if (fragmentTime < startTime) {
-					// before the given interval
-					desiredFdp = fdp;
-					desiredFragmentStartTime = startTime;
-					return false; // stop iterating
-				} else if (isLast) {
-					// catch all in the last entry
-					desiredFdp = fdp;
-					desiredFragmentStartTime = fragmentTime;
-					return false;
-				} else if(fragmentTime<endTime) {
-					// between the start and end of this interval
-					desiredFdp = fdp;
-					desiredFragmentStartTime = fragmentTime;
-					return false; // stop iterating
-				} else {
-					// beyond this interval, but not the last entry 
-					return true; // keep iterating
-				}
-			});
-			
-			if (desiredFdp == null) {
-				// no fragment entries case
-				return null;
-			}
+                if (fragmentTime < startTime) {
+                    // before the given interval
+                    desiredFdp = fdp;
+                    desiredFragmentStartTime = startTime;
+                    return false; // stop iterating
+                } else if (isLast) {
+                    // catch all in the last entry
+                    desiredFdp = fdp;
+                    desiredFragmentStartTime = fragmentTime;
+                    return false;
+                } else if(fragmentTime<endTime) {
+                    // between the start and end of this interval
+                    desiredFdp = fdp;
+                    desiredFragmentStartTime = fragmentTime;
+                    return false; // stop iterating
+                } else {
+                    // beyond this interval, but not the last entry 
+                    return true; // keep iterating
+                }
+            });
+            
+            if (desiredFdp == null) {
+                // no fragment entries case
+                return null;
+            }
 
             uint desiredFragmentId = calculateFragmentId(desiredFdp, desiredFragmentStartTime);
             FragmentAccessInformation fai = new FragmentAccessInformation();
             fai.fragId          = desiredFragmentId;
-			fai.fragDuration    = desiredFdp.duration;
-			fai.fragmentEndTime = (uint)desiredFdp.durationAccrued + (desiredFragmentId - desiredFdp.firstFragment + 1) * desiredFdp.duration;
-			return fai;
+            fai.fragDuration    = desiredFdp.duration;
+            fai.fragmentEndTime = (uint)desiredFdp.durationAccrued + (desiredFragmentId - desiredFdp.firstFragment + 1) * desiredFdp.duration;
+            return fai;
         }
 
         /// <summary>
@@ -462,50 +462,50 @@ namespace hdsdump.f4f {
         /// if will be called in ascending startFragmentId order.
         /// </summary>
         private void forEachInterval(Func<FragmentDurationPair, bool, uint, uint, uint, uint, bool> f) {
-			// search for gaps, then check if the desired time is in that gap
-			for(int i = 0; i < fragmentDurationPairs.Count; ++i) {
+            // search for gaps, then check if the desired time is in that gap
+            for(int i = 0; i < fragmentDurationPairs.Count; ++i) {
                 FragmentDurationPair fdp = fragmentDurationPairs[i];
-				if(fdp.duration == 0) {
-					// some kind of discontinuity
-					continue;
-				}
+                if(fdp.duration == 0) {
+                    // some kind of discontinuity
+                    continue;
+                }
 
                 uint startFragmentId = fdp.firstFragment;
                 uint startTime       = (uint)fdp.durationAccrued;
-				
-				// find the valid entry or the next skip, gap, or skip+gap
-				bool isLast = true; int j;
+                
+                // find the valid entry or the next skip, gap, or skip+gap
+                bool isLast = true; int j;
                 for (j = i + 1; j < fragmentDurationPairs.Count; ++j) {
-					if(fragmentDurationPairs[j].duration != 0 || // next is valid entry
-					   fragmentDurationPairs[j].discontinuityIndicator == 1 || // next is skip
-					   fragmentDurationPairs[j].discontinuityIndicator == 2 || // next is gap
-					   fragmentDurationPairs[j].discontinuityIndicator == 3)   // next is skip+gap
-					{
-						isLast = false;
-						break;
-					} else {
-						// eof or some unknown kind of discontinuity
-					}
-				}
+                    if(fragmentDurationPairs[j].duration != 0 || // next is valid entry
+                       fragmentDurationPairs[j].discontinuityIndicator == 1 || // next is skip
+                       fragmentDurationPairs[j].discontinuityIndicator == 2 || // next is gap
+                       fragmentDurationPairs[j].discontinuityIndicator == 3)   // next is skip+gap
+                    {
+                        isLast = false;
+                        break;
+                    } else {
+                        // eof or some unknown kind of discontinuity
+                    }
+                }
 
                 uint endFragmentId;
                 uint endTime;
-				if (isLast) {
-					// there's no next entry
-					endFragmentId = 0;
-					endTime       = 0;
-				} else {
-					endFragmentId = fragmentDurationPairs[j].firstFragment;
-					if(startFragmentId > endFragmentId) // very uncommon case: fragment numbers are out of order
-						continue;
-					endTime = startTime + (endFragmentId - startFragmentId) * fdp.duration;
-				}
-				
-				bool shouldContinue = f(fdp, isLast, startFragmentId, endFragmentId, startTime, endTime);
-				if (!shouldContinue || isLast)
-					return;
-			}
-		}
+                if (isLast) {
+                    // there's no next entry
+                    endFragmentId = 0;
+                    endTime       = 0;
+                } else {
+                    endFragmentId = fragmentDurationPairs[j].firstFragment;
+                    if(startFragmentId > endFragmentId) // very uncommon case: fragment numbers are out of order
+                        continue;
+                    endTime = startTime + (endFragmentId - startFragmentId) * fdp.duration;
+                }
+                
+                bool shouldContinue = f(fdp, isLast, startFragmentId, endFragmentId, startTime, endTime);
+                if (!shouldContinue || isLast)
+                    return;
+            }
+        }
 
     }
 }

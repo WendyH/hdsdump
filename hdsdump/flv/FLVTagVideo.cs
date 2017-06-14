@@ -5,30 +5,30 @@ namespace hdsdump.flv {
 
         // CONSTRUCTOR
         public FLVTagVideo(TagType type = TagType.VIDEO): base(type) {
-		}
-		
-		public Frame FrameType {
+        }
+        
+        public Frame FrameType {
             get { return (Frame)((Data[0] >> 4) & 0x0f); }
             set {
                 Data[0] &= 0x0f;   // clear top 4 bits
                 Data[0] |= (byte)(((int)value & 0x0f) << 4);
             }
         }
-		
-		public Codec CodecID {
+        
+        public Codec CodecID {
             get { return (Codec)(Data[0] & 0x0f); }
-			set {
+            set {
                 Data[0] &= 0xf0;    // clear bottom 4 bits
                 Data[0] |= (byte)((int)value & 0x0f);
             }
         }
-		
-		public int InfoPacketValue {
+        
+        public int InfoPacketValue {
             get { return Data[1]; }
             set { Data[1] = (byte)value; }
         }
 
-		public AVCPacket AvcPacketType {
+        public AVCPacket AvcPacketType {
             get { return (AVCPacket)((CodecID != Codec.AVC) ? 0 : Data[1]); }
             set {
                 Data[1] = (byte)value;
@@ -40,8 +40,8 @@ namespace hdsdump.flv {
                 }
             }
         }
-		
-		public uint AVCCompositionTimeOffset {
+        
+        public uint AVCCompositionTimeOffset {
             get {
                 // throw error if frameType == FRAME_TYPE_INFO?
                 if ((CodecID != Codec.AVC) || (AvcPacketType != AVCPacket.NALU)) return 0;
@@ -62,25 +62,25 @@ namespace hdsdump.flv {
                 Data[4] = (byte)((value      ) & 0xff);
             }
         }
-		
+        
         public enum Frame: int {
             UNKNOWN            = 0,
-		    KEYFRAME           = 1,
-		    INTER              = 2,
-		    DISPOSABLE_INTER   = 3,
-		    GENERATED_KEYFRAME = 4,
-		    INFO               = 5
+            KEYFRAME           = 1,
+            INTER              = 2,
+            DISPOSABLE_INTER   = 3,
+            GENERATED_KEYFRAME = 4,
+            INFO               = 5
         }
 
         public enum Codec : int {
             UNKNOWN   = 0,
             JPEG      = 1,
-		    SORENSON  = 2,
-		    SCREEN    = 3,
-		    VP6       = 4,
-		    VP6_ALPHA = 5,
-		    SCREEN_V2 = 6,
-		    AVC       = 7
+            SORENSON  = 2,
+            SCREEN    = 3,
+            VP6       = 4,
+            VP6_ALPHA = 5,
+            SCREEN_V2 = 6,
+            AVC       = 7
         }
         public enum AVCPacket     : int { SEQUENCE_HEADER = 0, NALU = 1, END_OF_SEQUENCE = 2 }
         public enum InfoPacketSeek: int { START = 0, END = 1 }
