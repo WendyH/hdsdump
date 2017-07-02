@@ -141,8 +141,7 @@ namespace hdsdump.f4f {
         }
 
         ///<summary>The total number of fragments in the movie.</summary>
-        public uint GetFragmentsCount()
-        {
+        public uint GetFragmentsCount() {
             AdobeFragmentRunTable      lastFragmentTable = fragmentRunTables[fragmentRunTables.Count - 1];
             List<FragmentDurationPair> fdps              = lastFragmentTable.fragmentDurationPairs;
 
@@ -157,7 +156,7 @@ namespace hdsdump.f4f {
             }
 
             int  deltaTime = (int)(currentMediaTime - lastValidFdp.durationAccrued);
-            uint fragCount = (uint)((deltaTime <= 0) ? 0 : (deltaTime / lastValidFdp.duration));
+            uint fragCount = (uint)((deltaTime <= lastValidFdp.duration) ? 1 : (deltaTime / lastValidFdp.duration));
             return lastValidFdp.firstFragment + fragCount - 1;
         }
 
