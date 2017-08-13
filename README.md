@@ -70,9 +70,14 @@ or select audio by label if alt media is present:
 hdsdump.exe -m <manifest_url> --alt spanish
 ```
 
+Remux with ffmpeg:
+```
+hdsdump.exe -m <manifest_url> | ffmpeg -i - -c copy out.mp4
+```
+
 Encoding with ffmpeg:
 ```
-hdsdump.exe -m <manifest_url> | ffmpeg.exe -y -i - out.mpg
+hdsdump.exe -m <manifest_url> | ffmpeg -i - -c:v libx265 -c:a copy OUT.mpg
 ```
 
 Switches
