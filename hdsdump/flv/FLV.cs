@@ -88,16 +88,22 @@ namespace hdsdump.flv {
 
                 } else if (Program.redir2Prog != null) {
                     // write to standart input of redirected process
-                    if (Program.redir2Prog.HasExited)
+                    if (Program.redir2Prog.HasExited) {
                         throw new InvalidOperationException("Redirected process was exited");
-
+                    }
                     Stream stream = Program.redir2Prog.StandardInput.BaseStream;
+                    if (stream == System.IO.Stream.Null) {
+                        throw new InvalidOperationException("Redirected process was exited");
+                    }
                     stream.Write(data, 0, data.Length);
                     stream.Flush();
 
                 } else if (play || Program.isRedirected) {
                     // write to standart output
                     Stream stdout = Console.OpenStandardOutput();
+                    if (stdout == System.IO.Stream.Null) {
+                        throw new InvalidOperationException("Redirected process was exited");
+                    }
                     stdout.Write(data, 0, data.Length);
                     stdout.Flush();
 

@@ -43,7 +43,7 @@ namespace hdsdump {
             int  elapsed              = 0;
             int  timeoutDetermetine   = 10000;
             while (!determinedVideoAudio && (elapsed < timeoutDetermetine)) {
-                Downloader.DetermineAudioVideo(selectedMedia, ref determinedVideoAudio, ref FLVFile.hasVideo, ref FLVFile.hasAudio);
+                Downloader.DetermineAudioVideo(FLVFile.onMetaData, selectedMedia, ref determinedVideoAudio, ref FLVFile.hasVideo, ref FLVFile.hasAudio);
                 if (!determinedVideoAudio) {
                     Thread.Sleep(100);
                     elapsed += 100;

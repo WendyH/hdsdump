@@ -167,7 +167,7 @@ namespace hdsdump {
             return tag;
         }
 
-        public void DetermineAudioVideo(Media media, ref bool isDetermined, ref bool hasVideo, ref bool hasAudio) {
+        public void DetermineAudioVideo(FLVTagScriptBody metadata, Media media, ref bool isDetermined, ref bool hasVideo, ref bool hasAudio) {
             if (!isDetermined) {
                 if (FragmentsData.ContainsKey(media) && FragmentsData[media].Count > 0) {
                     var tagStore = FragmentsData[media].Peek();
@@ -177,17 +177,45 @@ namespace hdsdump {
                         hasAudio = tagStore.hasAudio;
                         isDetermined = true;
                         string videoInfo, audioInfo;
-                        videoInfo = hasVideo ? "<c:DarkGreen>" + FLVTagVideo.CodecToString(tagStore.VideoCodec) : "<c:DarkRed>None";
+                        
+                        if (hasVideo) {
+                            string codec = FLVTagVideo.CodecToString(tagStore.VideoCodec);
+                            if (metadata != null) {
+                                string res = metadata.GetInfoIfExists("videocodecid");
+                                if (res == "avc1" || res == "7")
+                                    codec = "H.264 / AVC / MPEG-4 (Part 10)";
+                            }
+                            videoInfo = "<c:DarkGreen>" + codec;
+                            if (metadata != null) {
+                                string res = metadata.GetInfoIfExists("width")+"x"+ metadata.GetInfoIfExists("height");
+                                if (res != "x") videoInfo += " " + res;
+                                res = metadata.GetInfoIfExists("videoframerate", "framerate", 5);
+                                if (res != "") videoInfo += " Frame rate: " + res;
+                                res = metadata.GetDuration();
+                                if (res != "") videoInfo += " Duration: " + res;
+                            }
+                        } else {
+                            videoInfo = "<c:DarkRed>None";
+                        }
+
                         if (hasAudio) {
+                            string audioSampleRate = string.Empty;
+                            if (metadata != null) {
+                                audioSampleRate = metadata.GetInfoIfExists("audiosamplerate");
+                            }
+                            if (audioSampleRate.Length == 0)
+                                audioSampleRate = FLVTagAudio.RateToString(tagStore.AudioRate);
+                            else
+                                audioSampleRate += "Hz";
                             audioInfo =
                                 "<c:DarkGreen>" + FLVTagAudio.FormatToString(tagStore.AudioFormat) +
-                                " " + FLVTagAudio.RateToString(tagStore.AudioRate) +
+                                " " + audioSampleRate +
                                 " " + (tagStore.AudioChannels == FLVTagAudio.Channels.MONO ? "Mono" : "Stereo");
                         } else {
                             audioInfo = "<c:DarkRed>None";
                         }
-                        Program.Message(string.Format("<c:DarkCyan>{0}: {1}", "Video", videoInfo));
-                        Program.Message(string.Format("<c:DarkCyan>{0}: {1}", "Audio", audioInfo));
+                        Program.Message("<c:DarkCyan>Video: "+videoInfo);
+                        Program.Message("<c:DarkCyan>Audio: "+audioInfo);
                         if (tagStore.isAkamaiEncrypted) {
                             Program.Message("<c:Yellow>Encryption: Akamai DRM");
                         }
@@ -255,7 +283,7 @@ namespace hdsdump {
         public FLVTagAudio.Format   AudioFormat;
         public FLVTagAudio.Channels AudioChannels;
         public FLVTagAudio.Rate     AudioRate;
-        public FLVTagVideo.Codec       VideoCodec;
+        public FLVTagVideo.Codec    VideoCodec;
     }
 
 }

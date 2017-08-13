@@ -42,5 +42,29 @@ namespace hdsdump.flv {
             AMF0.Write(stream, Name);
             AMF0.Write(stream, Data);
         }
+
+        public string GetInfoIfExists(string name, string altname = "", int maxLen = 99) {
+            string val = string.Empty;
+
+            if (Data.ContainsKey(name)) {
+                val = Data[name].ToString();
+            } else if (Data.ContainsKey(altname)) {
+                val = Data[altname].ToString();
+            }
+
+            if (val.Length > maxLen)
+                val = val.Substring(0, maxLen);
+
+            return val;
+        }
+
+        public string GetDuration() {
+            if (Data.ContainsKey("duration")) {
+                double dur = (double)Data["duration"];
+                System.TimeSpan time = System.TimeSpan.FromMilliseconds(dur*1000);
+                return string.Format("{0:00}:{1:00}:{2:00}.{3:00}", time.Hours, time.Minutes, time.Seconds, time.Milliseconds);
+            }
+            return string.Empty;
+        }
     }
 }
