@@ -59,12 +59,15 @@ namespace hdsdump.flv {
         }
 
         public string GetDuration() {
+            string durStr = string.Empty;
             if (Data.ContainsKey("duration")) {
-                double dur = (double)Data["duration"];
-                System.TimeSpan time = System.TimeSpan.FromMilliseconds(dur*1000);
-                return string.Format("{0:00}:{1:00}:{2:00}.{3:00}", time.Hours, time.Minutes, time.Seconds, time.Milliseconds);
+                double.TryParse(Data["duration"].ToString(), out double dur);
+                if (dur > 0) {
+                    System.TimeSpan time = System.TimeSpan.FromMilliseconds(dur * 1000);
+                    durStr = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", time.Hours, time.Minutes, time.Seconds, time.Milliseconds);
+                }
             }
-            return string.Empty;
+            return durStr;
         }
     }
 }
