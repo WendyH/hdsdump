@@ -16,7 +16,7 @@ Features
 * Flash® Media Manifest (F4M) format version 3.0 support
 * Selection alternate audio (if exists) by language, codec, bitrate or label
 * Akamai DRM decryption (from AdobeHDS.php by K-S-V)
-* Piping stream into other allpications or processes
+* Piping stream into other applications or processes
 * Not breaking if live stream is interrupted
 
 Usage
